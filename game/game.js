@@ -11,12 +11,19 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
-let SCALE = 1;
+let SCALE = 1, RS = 1; // RS: canvas backing-store scale so art stays sharp on large/Retina screens
+cv.style.width = W + 'px'; cv.style.height = H + 'px';
 function resize() {
   SCALE = Math.min(innerWidth / W, innerHeight / H);
   stage.style.transform = `scale(${SCALE})`;
   stage.style.left = (innerWidth - W * SCALE) / 2 + 'px';
   stage.style.top = (innerHeight - H * SCALE) / 2 + 'px';
+  const rs = clamp(SCALE * (window.devicePixelRatio || 1), 1, 2.5);
+  if (Math.abs(rs - RS) > 0.01 || cv.width !== Math.round(W * rs)) {
+    RS = rs; cv.width = Math.round(W * RS); cv.height = Math.round(H * RS);
+  }
+  ctx.setTransform(RS, 0, 0, RS, 0, 0);
+  ctx.imageSmoothingQuality = 'high';
 }
 addEventListener('resize', resize); resize();
 
@@ -715,9 +722,9 @@ function showMenu() {
   ui.dialog.classList.add('hidden'); ui.overlay.classList.add('hidden'); ui.hud.classList.add('hidden');
   bgm('menu');
   showScreen(`
-    <button class="menu-hit" style="left:72px;top:284px;width:262px;height:64px" id="m-play" aria-label="Play Game"></button>
-    <button class="menu-hit" style="left:70px;top:360px;width:240px;height:64px" id="m-opt" aria-label="Options"></button>
-    <button class="menu-hit" style="left:66px;top:436px;width:242px;height:66px" id="m-more" aria-label="More games"></button>
+    <button class="menu-hit" style="left:58px;top:288px;width:266px;height:62px" id="m-play" aria-label="Play Game"></button>
+    <button class="menu-hit" style="left:52px;top:366px;width:230px;height:62px" id="m-opt" aria-label="Options"></button>
+    <button class="menu-hit" style="left:52px;top:442px;width:252px;height:64px" id="m-more" aria-label="More games"></button>
     <div class="menu-foot">Mẹo: chơi với tai nghe · <kbd>←</kbd><kbd>→</kbd> di chuyển · <kbd>E</kbd> tương tác</div>`,
     s => {
       s.querySelector('#m-play').onclick = () => { ac(); SFX.click(); startGame(); };
@@ -1071,6 +1078,7 @@ function drawCut() {
   } else { ctx.fillStyle = '#05070b'; ctx.fillRect(0, 0, W, H); }
 }
 function render() {
+  ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, W, H);
   if (G.mode === 'menu') { if (IMG.bg_menu) ctx.drawImage(IMG.bg_menu, 0, 0, W, H); return; }
   if (G.cut) { drawCut(); return; }
