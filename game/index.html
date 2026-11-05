@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cuộc Gọi Từ Campuchia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Patrick+Hand&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv" width="1280" height="720"></canvas>
+
+  <div id="vignette"></div>
+
+  <div id="hud" class="hidden">
+    <div id="hud-obj" class="box">
+      <div class="lbl">NHIỆM VỤ</div>
+      <div id="obj-text"></div>
+      <div id="room-text"></div>
+      <div id="dai-text"></div>
+    </div>
+    <div id="hud-timer" class="box mono">00:00</div>
+    <div id="hud-right" class="box">
+      <div class="lbl">MỨC NGHI NGỜ</div>
+      <div id="det-bar"><div id="det-fill"></div></div>
+      <div id="lives"></div>
+    </div>
+    <div id="hud-inv"></div>
+    <div id="hud-btns">
+      <button id="btn-hint" title="Gợi ý (H)">💡 Gợi ý</button>
+      <button id="btn-pause" title="Tạm dừng (Esc)">⏸</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div id="overlay" class="hidden"><div id="panel"></div></div>
+
+  <div id="dialog" class="hidden">
+    <div id="d-portrait"></div>
+    <div id="d-box">
+      <div id="d-name"></div>
+      <div id="d-text"></div>
+      <div id="d-next">▼ E / Space / Click</div>
+    </div>
+  </div>
+
+  <div id="screen" class="hidden"></div>
+  <div id="fade"></div>
+  <div id="flash"></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
