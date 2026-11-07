@@ -24,7 +24,7 @@ addEventListener('resize', resize); resize();
 const toStage = e => { const r = stage.getBoundingClientRect(); return { x: (e.clientX - r.left) / SCALE, y: (e.clientY - r.top) / SCALE }; };
 
 /* ---------------- Assets ---------------- */
-const ROOMS = ['office', 'desk', 'desk2', 'pc', 'corner', 'hallOffice', 'hall', 'hallWater', 'hallKPI', 'boss', 'bossLeft', 'bossRight', 'cellDoor', 'cells'];
+const ROOMS = ['gate', 'office', 'desk', 'desk2', 'pc', 'corner', 'hallOffice', 'hall', 'hallWater', 'hallKPI', 'boss', 'bossLeft', 'bossRight', 'cellDoor', 'cells'];
 const IMG = {};
 const IMG_SRC = {
   ...Object.fromEntries(ROOMS.map(r => [r, A(`rooms/${r}.jpg`)])),
@@ -33,7 +33,7 @@ const IMG_SRC = {
 function loadAssets(onProgress) {
   const extra = ['props/binder.png', 'props/clock.png', 'props/paper20.png', 'props/k.png', 'props/cup.png', 'chars/yen.png',
     'ui/box_ti.png', 'ui/box_dai.png', 'ui/box_yen.png', 'ui/menu_bg.jpg', 'ui/logo.png', 'ui/start.png', 'ui/start_h.png', 'ui/option.png', 'ui/option_h.png',
-    'ui/opt_bg.jpg', 'ui/opt_panel.webp', 'ui/snd_panel.webp', 'ui/tut_panel.webp', 'ui/quit_panel.webp', 'ui/pause_panel.webp', 'ui/end_bg.jpg', 'ui/end_title.png'];
+    'ui/opt_bg.jpg', 'ui/opt_panel.webp', 'ui/snd_panel.webp', 'ui/tut_panel.webp', 'ui/quit_panel.webp', 'ui/pause_panel.webp', 'ui/end_bg.jpg', 'ui/end_title.png', 'ui/mission.jpg'];
   const all = [...Object.entries(IMG_SRC), ...extra.map(p => [p, A(p)])];
   let done = 0;
   return Promise.all(all.map(([k, src]) => new Promise(res => {
@@ -132,7 +132,7 @@ const fmt = s => { s = Math.max(0, Math.ceil(s)); return String(Math.floor(s / 6
 /* ---------------- Game state ---------------- */
 const G = { mode: 'loading' };
 const D = {};
-const AREA = { office: 'office', desk: 'office', desk2: 'office', pc: 'office', corner: 'office', hallOffice: 'hall', hall: 'hall', hallWater: 'hall', hallKPI: 'hall', cellDoor: 'hall', boss: 'boss', bossLeft: 'boss', bossRight: 'boss', cells: 'cells' };
+const AREA = { office: 'office', desk: 'office', desk2: 'office', pc: 'office', corner: 'office', hallOffice: 'hall', hall: 'hall', hallWater: 'hall', hallKPI: 'hall', cellDoor: 'hall', boss: 'boss', bossLeft: 'boss', bossRight: 'boss', cells: 'cells', gate: 'outside' };
 const SAFE = new Set(['desk', 'pc']);
 const ROUTE = ['boss', 'hall', 'office', 'hall'];
 const STAY = { boss: 14, hall: 7, office: 9 };
@@ -144,7 +144,7 @@ function newGame() {
     mode: 'play', view: 'office', inv: new Set(), flags: {}, lives: 3, det: 0, caught: 0, grace: 0,
     alarm: false, countdown: 0, overlay: null, dlg: null, paused: false, video: false, busy: false, t: 0, hbT: 0, hover: null, hoverArrow: null,
   });
-  Object.assign(D, { area: 'office', idx: 2, t: 6, warned: false, greeted: false });
+  Object.assign(D, { area: 'hall', idx: 3, t: 9999, warned: false, greeted: true });
 }
 const has = id => G.inv.has(id);
 
@@ -198,6 +198,9 @@ const VIEWS = {
     { x: 436, y: 120, w: 797, h: 884, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: cellDoorAct },
     { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: openKeypad },
   ], draw: drawCellBars },
+  gate: { arrows: { up: 'hall' }, spots: [
+    { x: 330, y: 330, w: 1320, h: 760, label: 'Đi vào khu tự trị', go: 'hall', sfx: 'door' },
+  ] },
   cells: { arrows: { down: 'cellDoor' }, spots: [
     { x: 985, y: 125, w: 215, h: 955, label: 'Phòng 602', act: () => cellAct(602) },
     { x: 760, y: 365, w: 85, h: 635, label: 'Phòng 609', act: () => cellAct(609) },
@@ -232,7 +235,13 @@ function go(view, sfx) {
     G.view = view;
     if (AREA[view] !== before) { G.grace = Math.max(G.grace, 1.0); if (D.area === AREA[view]) SFX.heart(); }
     ui.fade.classList.remove('on');
-    setTimeout(() => { G.busy = false; }, 120);
+    setTimeout(() => {
+      G.busy = false;
+      if (view === 'hall' && !G.flags.intro) {
+        G.flags.intro = true;
+        dialog([L.intro], () => { D.t = 3; G.grace = 4; D.greeted = false; });
+      }
+    }, 120);
   }, 220);
 }
 
@@ -272,7 +281,7 @@ const L = {
   note: { who: 'ti', v: 'note_ti', text: 'Trời đất ơi, mật khẩu dán chình ình trên sổ luôn. St5K, nhớ nè!' },
   pclock: { who: 'ti', v: 'pclock_ti', text: 'Có khóa nè trời. Mật khẩu ở đâu ta?' },
   pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai bét rồi!' },
-  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'An Yên, phòng 602! Giờ kiếm mật khẩu cửa phòng giam.' },
+  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'An Yên, phòng 603! Giờ kiếm mật khẩu cửa phòng giam.' },
   clock: { who: 'ti', v: 'clock_ti', text: 'Số 4 xanh lè trên đồng hồ. Nhớ nè!' },
   paper: { who: 'ti', v: 'paper_ti', text: 'Lục thùng rác ra được số 20. Hên dữ thần!' },
   cup: { who: 'ti', v: 'cup_ti', text: 'Cái ly có số 2 nè. Ghi lại liền!' },
@@ -365,7 +374,7 @@ function openFolder(f) {
 }
 function profileHTML() {
   return `<div class="profile"><div class="ph" style="background-image:url(${A('chars/yen.png')})"></div>
-    <div>Name: <b>Nguyễn An Yên</b><br>Date: 01-04-2007<br>Born: Việt Nam<br>Status: <span class="err">FAILED KPI</span><br>Prison cell: <span class="hl"><b>602</b></span></div></div>`;
+    <div>Name: <b>Nguyễn An Yên</b><br>Date: 01-04-2007<br>Born: Việt Nam<br>Status: <span class="err">FAILED KPI</span><br>Prison cell: <span class="hl"><b>603</b></span></div></div>`;
 }
 
 /* --- Keypad of the prison door --- */
@@ -404,10 +413,10 @@ function cellDoorAct() {
   go('cells', 'door');
 }
 function cellAct(n) {
-  if (n !== 602) return dialog([L.wrongcell]);
+  if (n !== 603) return dialog([L.wrongcell]);
   if (!has('key')) return dialog([L.nokey]);
   SFX.door(); G.flags.rescued = true; G.alarm = false;
-  dialog([L.rescue], () => playVideo('cut3', endScreen));
+  dialog([L.rescue], () => playVideo('cut3', missionComplete));
 }
 
 /* ---------------- Cutscenes ---------------- */
@@ -542,6 +551,13 @@ function showPause() {
   });
 }
 function resume() { G.paused = false; hideScreen(); }
+function missionComplete() {
+  G.mode = 'end'; ui.hud.classList.add('hidden'); SFX.ok();
+  showScreen(`<img class="bg" src="${A('ui/mission.jpg')}" alt="Mission Complete" style="cursor:pointer">`, s => {
+    let done = false; const next = () => { if (!done) { done = true; endScreen(); } };
+    s.querySelector('.bg').onclick = next; setTimeout(next, 3500);
+  });
+}
 function endScreen() {
   G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu');
   showScreen(`<img class="bg" src="${A('ui/end_bg.jpg')}" alt="">
@@ -565,23 +581,20 @@ function gameOver() {
 function startGame() {
   hideScreen(); newGame(); renderInv(); bgm(null);
   playVideo('cut1', () => {
-    G.mode = 'play'; G.view = 'office'; ui.hud.classList.remove('hidden'); bgm('calm');
-    dialog([L.intro], () => {
-      toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000);
-      D.t = 3; G.grace = 4;
-    });
+    G.mode = 'play'; G.view = 'gate'; ui.hud.classList.remove('hidden'); bgm('calm');
+    toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000);
   });
 }
 function objective() {
   const n = LETTERS.filter(has).length;
-  if (has('key')) return 'Giải cứu An Yên ở phòng 602!';
+  if (has('key')) return 'Giải cứu An Yên ở phòng 603 (cuối hành lang)!';
   if (G.flags.gate) return 'Tìm chìa khóa phòng giam';
   if (G.flags.folder) return `Tìm 4 ký tự để mở cửa phòng giam (${n}/4)`;
   return 'Mở hồ sơ trong máy số 4';
 }
 function hint() {
   let t;
-  if (has('key')) t = 'Ra cửa CELL ở hành lang, vào phòng giam và mở phòng 602.';
+  if (has('key')) t = 'Ra cửa CELL ở hành lang, vào phòng giam và mở phòng 603 ở cuối hành lang.';
   else if (G.flags.gate) t = 'Chìa khóa treo ở đầu nai trong phòng ông trùm (cửa gỗ cạnh bảng KPI). Vào lúc hắn đi tuần chỗ khác.';
   else if (G.flags.folder) {
     const where = { cup: 'cái ly ở máy lọc nước (hành lang)', clock: 'đồng hồ (góc phòng làm việc)', k: 'bảng KPI (hành lang)', paper: 'thùng rác (góc phòng làm việc)' };
@@ -596,6 +609,7 @@ function hint() {
 function arrowRects() {
   const a = VIEWS[G.view].arrows, r = [];
   if (a.down) r.push({ dir: 'down', to: a.down, x: 900, y: 940, w: 120, h: 120 });
+  if (a.up) r.push({ dir: 'up', to: a.up, x: 900, y: 700, w: 120, h: 120 });
   if (a.left) r.push({ dir: 'left', to: a.left, x: 20, y: 480, w: 120, h: 120 });
   if (a.right) r.push({ dir: 'right', to: a.right, x: 1780, y: 480, w: 120, h: 120 });
   return r;
@@ -637,6 +651,7 @@ addEventListener('keydown', e => {
   if (G.paused || G.busy) return;
   const a = VIEWS[G.view].arrows;
   if (e.key === 'ArrowDown' && a.down) { e.preventDefault(); go(a.down); }
+  if (e.key === 'ArrowUp' && a.up) { e.preventDefault(); go(a.up); }
   if (e.key === 'ArrowLeft' && a.left) { e.preventDefault(); go(a.left); }
   if (e.key === 'ArrowRight' && a.right) { e.preventDefault(); go(a.right); }
   if (e.key === 'h' || e.key === 'H') hint();
@@ -654,8 +669,8 @@ function update(dt) {
 }
 function drawArrow(r, hover) {
   const cx = r.x + r.w / 2, cy = r.y + r.h / 2, s = hover ? 1.15 : 1, bob = Math.sin(G.t * 5) * 6;
-  ctx.save(); ctx.translate(cx + (r.dir === 'left' ? -bob : r.dir === 'right' ? bob : 0), cy + (r.dir === 'down' ? bob : 0));
-  ctx.rotate(r.dir === 'down' ? Math.PI / 2 : r.dir === 'left' ? Math.PI : 0); ctx.scale(s, s);
+  ctx.save(); ctx.translate(cx + (r.dir === 'left' ? -bob : r.dir === 'right' ? bob : 0), cy + (r.dir === 'down' ? bob : r.dir === 'up' ? -bob : 0));
+  ctx.rotate(r.dir === 'down' ? Math.PI / 2 : r.dir === 'up' ? -Math.PI / 2 : r.dir === 'left' ? Math.PI : 0); ctx.scale(s, s);
   ctx.beginPath(); ctx.moveTo(-46, -18); ctx.lineTo(8, -18); ctx.lineTo(8, -44); ctx.lineTo(52, 0); ctx.lineTo(8, 44); ctx.lineTo(8, 18); ctx.lineTo(-46, 18); ctx.closePath();
   const g = ctx.createLinearGradient(-46, 0, 52, 0); g.addColorStop(0, '#e46a3c'); g.addColorStop(1, '#d6332a');
   ctx.fillStyle = g; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6; ctx.lineJoin = 'round';

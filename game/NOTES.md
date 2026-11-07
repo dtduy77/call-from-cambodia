@@ -15,18 +15,22 @@ Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ v�
 
 ## Bản đồ góc nhìn
 ```
-office ─┬─ desk (sổ St5K) ── pc (folder hồ sơ: mật khẩu St5K, ra An Yên phòng 602)
+gate (cổng) ↑ hall (Anh Đại giao việc lần đầu)
+office ─┬─ desk (sổ St5K) ── pc (folder hồ sơ: mật khẩu St5K, ra An Yên phòng 603)
         ├─ desk2 (máy người khác)
         ├─ corner (đồng hồ số 4, thùng rác số 20)
         └─↓ hallOffice ─← hall ─┬─ hallWater (ly số 2)
                                 ├─ hallKPI (chữ K) ── cửa gỗ ── boss ─┬─ bossLeft
                                 │                                      └─ bossRight (đầu nai, chùm chìa khóa)
-                                └─ cellDoor (keypad 24K20) ── cells (cửa 602, chiếu cut3, màn The End)
+                                └─ cellDoor (keypad 24K20) ── cells (cửa 603 ở cuối hành lang, chiếu cut3, rồi Mission Complete, rồi The End)
 ```
 Tọa độ điểm click nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh.
 
 ## Anh Đại đi tuần
 Lộ trình: phòng ông trùm, hành lang, phòng làm việc, hành lang, lặp lại. Trước khi ổng tới khu vực bạn đang đứng khoảng 4 giây sẽ có cảnh báo tiếng bước chân. Đứng ở góc nhìn `desk` hoặc `pc` (bàn máy số 4) thì an toàn. Ở các góc khác, thanh nghi ngờ sẽ tăng. Đầy thanh thì chiếu cut2 và mất 1 mạng. Mất đủ 3 mạng là thua. Lấy được chìa khóa thì có 60 giây.
+
+## Đối chiếu với prototype Figma
+Luồng đã khớp theo prototype (56 frame): menu → cutscene 1 → cổng → hành lang (Anh Đại giao việc) → phòng làm việc → các góc nhìn → phòng ông trùm → cửa CELL → phòng giam 603 → Mission Complete. Có khoảng 18 frame trong Figma chỉ hiện nền trắng kèm mũi tên (có thể là frame thoại hoặc video chưa tải được), cần nhóm xác nhận nội dung.
 
 ## Còn chờ
 - Link UX/UI của nhóm, để chỉnh layout HUD và các nút cho khớp.
