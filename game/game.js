@@ -191,10 +191,15 @@ const VIEWS = {
     { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
   office: { dai: { x: 760, h: 880 }, nav: [
-    NF(1360, 730, 'corner', 'Góc bảng ghim · đồng hồ'),
-    NF(800, 770, 'hall', 'Ra hành lang'),
+    NF(1300, 670, 'corner', 'Góc bảng ghim · đồng hồ'),
+    NF(870, 650, 'hall', 'Ra hành lang'),
     NR('pc', 'Về máy 04'),
   ], spots: [
+    // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra góc xéo bàn bên
+    { x: 235, y: 735, w: 300, h: 170, label: 'Máy số 4 (của mình)', go: 'pc' },
+    { x: 545, y: 735, w: 340, h: 170, label: 'Máy bàn khác', go: 'desk' },
+    { x: 1030, y: 735, w: 290, h: 170, label: 'Máy bàn khác', go: 'desk' },
+    { x: 1335, y: 735, w: 295, h: 170, label: 'Máy bàn khác', go: 'desk' },
     { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
   ] },
   corner: { nav: [NL('office', 'Quay lại văn phòng')], spots: [
