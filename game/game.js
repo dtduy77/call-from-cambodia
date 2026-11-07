@@ -152,44 +152,39 @@ function newGame() {
 const has = id => G.inv.has(id);
 
 /* ---------------- Views & hotspots (1920×1080 art coordinates) ---------------- */
-// nav: chỉ mũi tên trái / phải ở mép màn hình. Đi vào cửa, bàn, máy thì bấm thẳng vào vật đó (spots).
-const NF = (x, y, to, label, o = {}) => ({ dir: 'fwd', x, y, to, label, ...o });
-const NL = (to, label, o = {}) => ({ dir: 'left', x: 86, y: 540, to, label, ...o });
-const NR = (to, label, o = {}) => ({ dir: 'right', x: 1834, y: 540, to, label, ...o });
-const NB = (to, label = 'Quay lại') => ({ dir: 'back', x: 960, y: 1000, to, label });
+// Mũi tên theo prototype Figma: vị trí (hệ 1920x1080) và góc lấy từ từng frame.
+// AR = mũi tên thẳng xoay theo góc (0 = phải, 180 = trái, -90 = lên, -45 = xéo lên phải, -135 = xéo lên trái);
+// BK = tam giác ▼ nhỏ ở giữa đáy để quay lại.
+const AR = (x, y, ang, to, label, o = {}) => ({ dir: 'ang', ang, x, y, to, label, ...o });
+const BK = (to, label = 'Quay lại') => ({ dir: 'back', x: 962, y: 990, to, label });
+const afterFolder = { cond: () => !!G.flags.folder };
 const VIEWS = {
-  gate: { nav: [NF(964, 762, () => enterCompound(), 'Vào khu nhà')], spots: [] }, // như prototype f04: chỉ mũi tên lên để đi vào, không viền cổng
-  hall: { dai: { x: 930, h: 720 }, nav: [
-    NL('hallWater', 'Máy lọc nước', { lock: true }),
-    NR('hallOffice', 'Văn phòng (máy 04)'),
-  ], spots: [
+  gate: { nav: [AR(230, 609, 180, () => dialog([L.notyet]), 'Bỏ về'), AR(960, 679, -90, () => enterCompound(), 'Vào khu nhà')], spots: [] }, // prototype f04: ← bỏ về, ↑ đi vào, không viền cổng
+  hall: { dai: { x: 930, h: 720 }, nav: [AR(1563, 532, -29, 'hallOffice', 'Văn phòng (máy 04)'), AR(1208, 583, -56, 'hallKPI', 'Bảng KPI · cửa gỗ', afterFolder), AR(611, 686, -145, 'hallWater', 'Máy lọc nước', afterFolder), AR(829, 616, -90, 'cellDoor', 'Cửa phòng giam (CELL)', afterFolder)], spots: [
     { x: 280, y: 237, w: 168, h: 215, label: 'Máy lọc nước', go: 'hallWater', lock: true }, // chỉ bình nước, không gồm kệ
     { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
     { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
   ] },
-  hallOffice: { dai: { x: 400, h: 860 }, nav: [NL('hall', 'Hành lang')], spots: [
+  hallOffice: { dai: { x: 400, h: 860 }, nav: [AR(230, 610, 180, 'hall', 'Hành lang'), AR(1144, 915, -54, 'pc', 'Vào ngồi máy 04')], spots: [
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
   ] },
   // Văn phòng theo prototype Figma (f06 → f13): vào là ngồi ngay máy 04 của Tí;
   // quay phải: bàn dán giấy note (slide 35) → bàn có cuốn sổ St5K; quay trái: toàn cảnh (slide 36) → góc bảng ghim.
-  pc: { nav: [NL('office', 'Nhìn quanh văn phòng'), NR('desk', 'Bàn bên phải')], spots: [
+  pc: { nav: [AR(228, 609, 180, 'office', 'Nhìn quanh văn phòng'), AR(1722, 590, 0, 'desk', 'Bàn bên phải')], spots: [
     { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
     { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
     { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
     { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
-  desk: { nav: [NL('pc', 'Về máy 04'), NR('desk2', 'Bàn kế tiếp')], spots: [
+  desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn kế tiếp')], spots: [
     { x: 235, y: 45, w: 640, h: 590, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
   ] },
-  desk2: { nav: [NL('desk', 'Quay lại')], spots: [
+  desk2: { nav: [AR(230, 608, 180, 'desk', 'Quay lại')], spots: [
     { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
     { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
-  office: { dai: { x: 760, h: 880 }, nav: [
-    NL('hall', 'Ra hành lang'),
-    NR('corner', 'Góc bảng ghim · đồng hồ'),
-  ], spots: [
+  office: { dai: { x: 760, h: 880 }, nav: [AR(1369, 767, -57, 'corner', 'Góc bảng ghim · đồng hồ'), AR(795, 753, -90, 'hall', 'Ra hành lang')], spots: [
     // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra góc xéo bàn bên
     { x: 235, y: 735, w: 300, h: 170, label: 'Máy số 4 (của mình)', go: 'pc' },
     { x: 545, y: 735, w: 340, h: 170, label: 'Máy bàn khác', go: 'desk' },
@@ -197,31 +192,31 @@ const VIEWS = {
     { x: 1335, y: 735, w: 295, h: 170, label: 'Máy bàn khác', go: 'desk' },
     { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
   ] },
-  corner: { nav: [NL('office', 'Quay lại văn phòng')], spots: [
+  corner: { nav: [AR(228, 608, 180, 'office', 'Quay lại văn phòng'), AR(1041, 464, -68, () => collect('clock'), 'Đồng hồ', { cond: () => !has('clock') }), AR(1250, 848, -29, () => collect('paper'), 'Thùng rác', { cond: () => !has('paper') })], spots: [
     { x: 268, y: 100, w: 576, h: 350, label: 'Bảng ghim', act: () => dialog([L.board]) },
     { x: 980, y: 40, w: 300, h: 320, label: 'Đồng hồ', shape: 'ellipse', act: () => collect('clock') },
     { x: 1150, y: 605, w: 300, h: 380, label: 'Thùng rác', act: () => collect('paper') },
   ] },
-  hallWater: { nav: [NR('hall', 'Quay lại hành lang')], spots: [
+  hallWater: { nav: [BK('hall')], spots: [
     { x: 1190, y: 630, w: 110, h: 150, label: 'Cái ly', act: () => collect('cup') },
   ] },
-  hallKPI: { dai: { x: 1140, h: 900 }, nav: [NL('hall', 'Quay lại hành lang')], spots: [
+  hallKPI: { dai: { x: 1140, h: 900 }, nav: [AR(1139, 738, -90, 'boss', 'Phòng ông trùm', { sfx: 'door' }), BK('hall')], spots: [
     { x: 22, y: 76, w: 698, h: 491, label: 'Bảng KPI', act: () => collect('k') },
     { x: 862, y: 76, w: 556, h: 760, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
   ] },
-  boss: { dai: { x: 900, h: 900 }, nav: [NL('hallKPI', 'Ra hành lang'), NR('bossRight', 'Góc sofa')], spots: [
+  boss: { dai: { x: 900, h: 900 }, nav: [AR(612, 711, -144, 'bossLeft', 'Góc làm việc'), AR(1302, 701, -43, 'bossRight', 'Góc sofa'), BK('hallKPI', 'Ra hành lang')], spots: [
     { x: 33, y: 327, w: 665, h: 620, label: 'Góc làm việc', go: 'bossLeft' },
     { x: 1222, y: 262, w: 560, h: 685, label: 'Góc sofa', go: 'bossRight' },
   ] },
-  bossLeft: { nav: [NR('boss', 'Quay lại')], spots: [] },
-  bossRight: { nav: [NL('boss', 'Quay lại')], spots: [
+  bossLeft: { nav: [AR(1672, 675, 0, 'bossRight', 'Góc sofa'), BK('boss')], spots: [] },
+  bossRight: { nav: [AR(213, 650, 180, 'bossLeft', 'Góc làm việc'), BK('boss')], spots: [
     { x: 720, y: 60, w: 340, h: 420, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
   ] },
-  cellDoor: { nav: [NL('hall', 'Quay lại hành lang')], spots: [
+  cellDoor: { nav: [AR(814, 673, -119, () => cellDoorAct(), 'Vào phòng giam', { cond: () => !!G.flags.gate }), BK('hall')], spots: [
     { x: 436, y: 120, w: 797, h: 700, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: () => cellDoorAct() },
     { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: () => openKeypad() },
   ], draw: drawCellBars },
-  cells: { nav: [NL('cellDoor', 'Quay lại')], spots: [
+  cells: { nav: [AR(493, 779, -120, () => cellAct(603), 'Buồng cuối dãy (603)'), BK('cellDoor')], spots: [
     { x: 985, y: 125, w: 215, h: 800, label: 'Phòng 602', act: () => cellAct(602) },
     { x: 760, y: 365, w: 85, h: 560, label: 'Phòng 609', act: () => cellAct(609) },
     { x: 630, y: 450, w: 50, h: 480, label: 'Phòng 601', act: () => cellAct(601) },
@@ -594,7 +589,8 @@ function showSound(back) {
 function showTutorial(back) {
   showScreen(`${panelBg()}<img class="bg" src="${A('ui/tut_panel.webp')}" alt="">
     <div class="tut-note"><b>MẸO NHỎ</b>
-      <p><span class="k">◀ ▶</span> Mũi tên đỏ trái / phải: đổi góc nhìn</p>
+      <p><span class="k">➜</span> Mũi tên đỏ: đi theo hướng mũi tên</p>
+      <p><span class="k">▼</span> Tam giác đỏ: quay lại</p>
       <p><span class="k">Click</span> vào cửa, máy, đồ vật để đi vào hoặc xem</p>
       <p><span class="k">H</span> Gợi ý &nbsp; <span class="k">Esc</span> Tạm dừng</p>
       <p class="warn">Nghe tiếng bước chân là chạy về <b>máy 04</b> ngồi liền!</p></div>
@@ -664,7 +660,7 @@ function startGame() {
 function startCut1() {
   playVideo('cut1', () => {
     G.mode = 'play'; G.view = 'gate'; ui.hud.classList.remove('hidden'); bgm('calm');
-    dialog([L.gate1, L.gate2], () => toast('Bấm mũi tên đỏ để đi vào · Bấm cửa, máy, đồ vật để xem · Mũi tên trái / phải để đổi góc nhìn', 5000));
+    dialog([L.gate1, L.gate2], () => toast('Bấm mũi tên đỏ để đi theo hướng đó · ▼ để quay lại · Bấm đồ vật để xem', 5000));
   });
 }
 function objective() {
@@ -690,7 +686,7 @@ function hint() {
 }
 
 /* ---------------- Input ---------------- */
-const arrowRects = () => VIEWS[G.view].nav.map(n => ({ ...n, x: n.x - 65, y: n.y - 65, w: 130, h: 130, cx: n.x, cy: n.y }));
+const arrowRects = () => VIEWS[G.view].nav.filter(n => !n.cond || n.cond()).map(n => ({ ...n, x: n.x - 65, y: n.y - 65, w: 130, h: 130, cx: n.x, cy: n.y }));
 function nav(a) {
   if (a.lock && !G.flags.folder) return dialog([L.watch]);
   ui.tip.classList.remove('on');
@@ -710,7 +706,7 @@ function updateHover() {
   G.hover = G.hoverArrow ? null : spotsOf(G.view).find(s => inRect(p, s)) || null;
   cv.style.cursor = (G.hover || G.hoverArrow) ? 'pointer' : 'default';
   const t = G.hover || G.hoverArrow;
-  if (t) { ui.tip.textContent = G.hover ? lbl(G.hover) : (G.hoverArrow.dir === 'back' ? '↩ ' : '➜ ') + G.hoverArrow.label; ui.tip.style.left = Math.min(p.x + 24, W - 420) + 'px'; ui.tip.style.top = (p.y + 24) + 'px'; ui.tip.classList.add('on'); }
+  if (t) { ui.tip.textContent = G.hover ? lbl(G.hover) : (G.hoverArrow.dir === 'back' ? '▼ ' : '➜ ') + G.hoverArrow.label; ui.tip.style.left = Math.min(p.x + 24, W - 420) + 'px'; ui.tip.style.top = (p.y + 24) + 'px'; ui.tip.classList.add('on'); }
   else ui.tip.classList.remove('on');
 }
 cv.addEventListener('pointerdown', e => {
@@ -738,8 +734,8 @@ addEventListener('keydown', e => {
   if (G.mode !== 'play') return;
   if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { G.paused ? resume() : showPause(); return; }
   if (G.paused || G.busy) return;
-  const ns = VIEWS[G.view].nav, by = d => ns.filter(n => n.dir === d);
-  const k = { ArrowLeft: by('left'), ArrowRight: by('right'), ArrowUp: by('fwd') }[e.key];
+  const ns = arrowRects(), by = f => ns.filter(f);
+  const k = { ArrowLeft: by(n => n.ang === 180), ArrowRight: by(n => n.ang === 0), ArrowUp: by(n => n.ang === -90), ArrowDown: by(n => n.dir === 'back') }[e.key];
   if (k && k.length === 1) { e.preventDefault(); nav(k[0]); }
   if (e.key === 'h' || e.key === 'H') hint();
 });
@@ -755,25 +751,21 @@ function update(dt) {
   if (G.alarm) { G.countdown -= dt; if (G.countdown <= 0) { G.countdown = 0; G.alarm = false; caught(); } }
 }
 function drawArrow(r, hover) {
-  const s = hover ? 1.15 : 1, bob = Math.sin(G.t * 5) * 6;
-  const off = { left: [-bob, 0], right: [bob, 0], fwd: [0, -bob], back: [0, bob * 0.6] }[r.dir];
-  ctx.save(); ctx.translate(r.cx + off[0], r.cy + off[1]); ctx.scale(s, s);
-  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const sc = hover ? 1.15 : 1, bob = Math.sin(G.t * 5) * 6;
+  ctx.save(); ctx.lineJoin = 'round';
   const red = ctx.createLinearGradient(-50, -50, 50, 50); red.addColorStop(0, '#ee7a44'); red.addColorStop(1, '#d6332a');
+  ctx.fillStyle = red; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6;
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5;
   if (r.dir === 'back') {
-    // mũi tên chữ U: quay lại chỗ trước
-    const path = () => { ctx.beginPath(); ctx.moveTo(36, 34); ctx.lineTo(36, -4); ctx.arc(0, -4, 36, 0, Math.PI, true); ctx.lineTo(-36, 6); };
-    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5;
-    path(); ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 32; ctx.stroke(); ctx.shadowColor = 'transparent';
-    path(); ctx.strokeStyle = red; ctx.lineWidth = 20; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-64, 2); ctx.lineTo(-8, 2); ctx.lineTo(-36, 44); ctx.closePath();
-    ctx.fillStyle = red; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6; ctx.fill(); ctx.stroke();
+    // tam giác ▼ như prototype
+    ctx.translate(r.cx, r.cy + bob * 0.5); ctx.scale(sc, sc);
+    ctx.beginPath(); ctx.moveTo(-34, -22); ctx.lineTo(34, -22); ctx.lineTo(0, 26); ctx.closePath();
   } else {
-    ctx.rotate({ fwd: -Math.PI / 2, left: Math.PI, right: 0 }[r.dir]);
-    ctx.beginPath(); ctx.moveTo(-46, -18); ctx.lineTo(8, -18); ctx.lineTo(8, -44); ctx.lineTo(52, 0); ctx.lineTo(8, 44); ctx.lineTo(8, 18); ctx.lineTo(-46, 18); ctx.closePath();
-    ctx.fillStyle = red; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6;
-    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5; ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
+    const a = r.ang * Math.PI / 180;
+    ctx.translate(r.cx + Math.cos(a) * bob, r.cy + Math.sin(a) * bob); ctx.rotate(a); ctx.scale(sc, sc);
+    ctx.beginPath(); ctx.moveTo(-46, -16); ctx.lineTo(8, -16); ctx.lineTo(8, -40); ctx.lineTo(52, 0); ctx.lineTo(8, 40); ctx.lineTo(8, 16); ctx.lineTo(-46, 16); ctx.closePath();
   }
+  ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
   ctx.restore();
 }
 function drawHover(s) {

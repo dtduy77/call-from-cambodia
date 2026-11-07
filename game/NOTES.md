@@ -2,7 +2,7 @@
 
 Bản chơi thử: https://call-from-cambodia.vercel.app/ (Vercel tự deploy mỗi khi push lên `main`, phục vụ thư mục `game/`).
 
-Game là escape room góc nhìn thứ nhất. Người chơi click vào cửa, máy, đồ vật để đi vào hoặc tương tác. Mũi tên đỏ chỉ có trái / phải ở mép màn hình để đổi góc nhìn. Rê chuột lên mũi tên hoặc đồ vật sẽ hiện tên.
+Game là escape room góc nhìn thứ nhất. Người chơi bấm mũi tên đỏ để đi (vị trí và hướng giống prototype Figma: ngang, thẳng lên, xéo ↗ ↖), tam giác ▼ ở giữa đáy để quay lại, và bấm vào đồ vật để xem. Rê chuột lên mũi tên hoặc đồ vật sẽ hiện tên.
 
 ## Cấu trúc
 - `index.html`, `style.css`, `game.js`: toàn bộ code, không cần build.
