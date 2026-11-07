@@ -352,21 +352,21 @@ function renderInv() {
 const ZOOM = { note: 'props/binder.png', clock: 'props/clock.png', paper: 'props/paper20.png', cup: 'props/cup.png', k: 'props/k.png', key: 'props/keys.png' };
 function collect(id) {
   if (has(id)) { showZoom(ZOOM[id]); return; }
-  const finish = () => {
-    closeOverlay(); G.inv.add(id); renderInv();
+  // như slide 44 / prototype: món đồ hiện to một mình kèm ▼; đóng lại rồi Tí mới nói
+  const after = () => {
     if (id === 'key') { G.alarm = true; G.countdown = 60; bgm('alarm'); toast('Ông trùm sắp phát hiện mất chìa khóa! Nhanh lên!', 3200); }
   };
-  if (id === 'key') {
-    return dialog([L.skull], () => { showZoom(ZOOM.key); SFX.pick(); dialog([L.key], finish); });
-  }
-  showZoom(ZOOM[id]);
-  SFX.pick();
-  dialog(id === 'note' ? [L.note, L.note2] : [L[id]], finish);
+  const look = () => {
+    G.inv.add(id); renderInv(); SFX.pick();
+    showZoom(ZOOM[id], () => dialog(id === 'note' ? [L.note, L.note2] : [L[id]], after));
+  };
+  if (id === 'key') return dialog([L.skull], look);
+  look();
 }
 
 /* ---------------- Overlays ---------------- */
-function showZoom(src) {
-  G.overlay = 'zoom';
+function showZoom(src, onClose) {
+  G.overlay = 'zoom'; G.zoomDone = onClose || null;
   ui.overlay.className = 'zoomwrap';
   ui.overlay.innerHTML = `<img class="zoom" src="${A(src)}" alt=""><button class="zback" title="Quay lại (Esc)">▼</button>`;
   ui.overlay.onpointerdown = e => { if (!G.dlg) closeOverlay(); };
@@ -375,6 +375,8 @@ function closeOverlay(silent) {
   if (!G.overlay) return;
   G.overlay = null; ui.overlay.className = 'hidden'; ui.overlay.innerHTML = ''; ui.overlay.onpointerdown = null;
   if (!silent) SFX.click();
+  const done = G.zoomDone; G.zoomDone = null;
+  if (done && !silent) done();
 }
 
 /* --- PC folders (drawn inside the monitor of the "pc" view) --- */
@@ -805,7 +807,7 @@ function render() {
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 30; ctx.drawImage(d, v.dai.x - w / 2, H - h + 40, w, h); ctx.restore();
   }
   if (G.hover && canInteract()) drawHover(G.hover);
-  if (G.mode === 'play' && !G.dlg) for (const r of arrowRects()) drawArrow(r, G.hoverArrow && G.hoverArrow.cx === r.cx && G.hoverArrow.cy === r.cy);
+  if (G.mode === 'play' && !G.dlg && !G.overlay) for (const r of arrowRects()) drawArrow(r, G.hoverArrow && G.hoverArrow.cx === r.cx && G.hoverArrow.cy === r.cy);
   if (G.alarm) { ctx.fillStyle = `rgba(200,30,30,${0.07 + 0.05 * Math.sin(G.t * 8)})`; ctx.fillRect(0, 0, W, H); }
 }
 function updHUD() {

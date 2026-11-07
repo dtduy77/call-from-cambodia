@@ -56,15 +56,18 @@ button{font-family:inherit;cursor:pointer}
 
 /* ---------- Dialogue ---------- */
 #dialog{position:absolute;inset:0;z-index:5}
-/* Nhân vật nói: to, lấy từ đầu tới đùi, đứng đè lên khung thoại (slide 46, 48, 50) */
+/* Đo theo ảnh in-game trong deck (slide 46, 48, 50): khung thoại gần hết bề ngang,
+   nhân vật to (đầu tới thắt lưng) đứng đè lên khung, chữ nằm ở phần khung không bị che. */
 #d-fig{position:absolute;z-index:2;pointer-events:none;filter:drop-shadow(8px 8px 0 rgba(0,0,0,.35))}
-#d-fig.ti{height:1560px;bottom:-700px;right:20px}
-#d-fig.yen{height:1560px;bottom:-760px;right:30px}
-#d-fig.dai{height:1400px;bottom:-660px;left:-190px}
-/* khung thoại giữ tỉ lệ ảnh 1800x438; lệch về phía không có nhân vật */
+#d-fig.ti{height:1870px;top:238px;left:1214px}
+#d-fig.yen{height:1660px;top:270px;left:1169px}
+#d-fig.dai{height:1034px;top:379px;left:20px}
 #d-box{position:absolute;z-index:1;left:160px;bottom:22px;width:1600px;height:386px;cursor:pointer}
-#dialog.fig-left #d-box{left:700px;width:1190px;height:290px}
-#dialog.fig-right #d-box{left:40px;width:1300px;height:316px}
+#dialog.fig-left #d-box,#dialog.fig-right #d-box{left:50px;width:1820px;height:443px;bottom:22px}
+#dialog.fig-left #d-text{left:35%;right:4%;top:40%;font-size:38px}
+#dialog.fig-right #d-text{left:7%;right:33%;top:40%;font-size:38px}
+#dialog.fig-right #d-next{right:34%}
+#dialog.fig-left #d-name,#dialog.fig-right #d-name{font-size:40px}
 #d-frame{position:absolute;inset:0;width:100%;height:100%}
 #d-name{position:absolute;top:5.7%;width:23.75%;text-align:center;font-weight:800;font-size:32px;color:#fff;letter-spacing:.06em;text-shadow:2px 2px 0 rgba(0,0,0,.45)}
 #d-name.l{left:5.1%}
@@ -78,7 +81,7 @@ button{font-family:inherit;cursor:pointer}
 .zoom{max-width:900px;max-height:640px;filter:drop-shadow(10px 12px 0 rgba(0,0,0,.45));margin-bottom:260px;animation:pop .25s}
 /* đồ vật phóng to nổi trên cảnh (slide 44): nền chỉ tối nhẹ, đồ vật lệch trái chừa chỗ cho Tí, ▼ đỏ để quay lại */
 #overlay.zoomwrap{background:rgba(8,10,12,.32);align-items:flex-start;justify-content:flex-start}
-#overlay.zoomwrap .zoom{position:absolute;left:690px;top:400px;transform:translate(-50%,-50%);height:540px;width:auto;max-width:860px;object-fit:contain;margin:0;animation:zpop .25s}
+#overlay.zoomwrap .zoom{position:absolute;left:960px;top:520px;transform:translate(-50%,-50%);height:700px;width:auto;max-width:1300px;object-fit:contain;margin:0;animation:zpop .25s}
 @keyframes zpop{from{transform:translate(-50%,-50%) scale(.7);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .zback{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:none;border:0;color:#d6332a;font-size:54px;line-height:1;text-shadow:3px 3px 0 #1b1b1b,-2px -2px 0 #1b1b1b,2px -2px 0 #1b1b1b,-2px 2px 0 #1b1b1b;animation:bob 1s infinite}
 @keyframes bob{50%{transform:translateX(-50%) translateY(6px)}}
@@ -153,4 +156,4 @@ button{font-family:inherit;cursor:pointer}
 #load-bar{width:600px;height:26px;border:4px solid #e2cbb2}
 #load-fill{height:100%;width:0;background:#e7b85a}
 /* Anh Đại nói chữ in hoa như deck (slide 46) */
-#dialog.fig-left #d-text{text-transform:uppercase;font-size:33px;letter-spacing:.01em}
+#dialog.fig-left #d-text{text-transform:uppercase;letter-spacing:.01em}
