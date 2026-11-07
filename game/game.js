@@ -159,14 +159,17 @@ const VIEWS = {
     { x: 55, y: 175, w: 556, h: 545, label: 'Màn hình máy số 4', go: 'pc' },
     { x: 1040, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
-  desk2: { arrows: { down: 'office' }, spots: [] },
+  desk2: { arrows: { down: 'office' }, spots: [
+    { x: 180, y: 120, w: 1250, h: 900, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
+  ] },
   pc: { arrows: { down: 'desk' }, spots: [
-    { x: 535, y: 170, w: 330, h: 64, label: 'Folder Ho_so_nhan_su', act: () => openFolder('hoso') },
-    { x: 535, y: 246, w: 330, h: 64, label: 'Folder Kich_ban', act: () => openFolder('kichban') },
-    { x: 535, y: 322, w: 330, h: 64, label: 'Folder KPI', act: () => openFolder('kpi') },
-    { x: 535, y: 398, w: 330, h: 64, label: 'Folder Anh', act: () => openFolder('anh') },
+    { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
+    { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
+    { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
+    { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
   corner: { arrows: { down: 'office' }, spots: [
+    { x: 268, y: 137, w: 576, h: 314, label: 'Bảng ghim', act: () => dialog([L.board]) },
     { x: 993, y: 131, w: 272, h: 273, label: 'Đồng hồ', act: () => collect('clock') },
     { x: 1150, y: 600, w: 310, h: 420, label: 'Thùng rác', act: () => collect('paper') },
   ] },
@@ -174,9 +177,9 @@ const VIEWS = {
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào phòng làm việc', go: 'office' },
   ] },
   hall: { dai: { x: 930, h: 720 }, arrows: { down: 'hallOffice' }, spots: [
-    { x: 273, y: 240, w: 196, h: 415, label: 'Máy lọc nước', go: 'hallWater' },
-    { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor' },
-    { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI' },
+    { x: 273, y: 240, w: 196, h: 415, label: 'Máy lọc nước', go: 'hallWater', lock: true },
+    { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
+    { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
   ] },
   hallWater: { arrows: { down: 'hall' }, spots: [
@@ -192,20 +195,20 @@ const VIEWS = {
   ] },
   bossLeft: { arrows: { down: 'boss', right: 'bossRight' }, spots: [] },
   bossRight: { arrows: { down: 'boss', left: 'bossLeft' }, spots: [
-    { x: 720, y: 60, w: 340, h: 480, label: 'Đầu nai', cond: () => !has('key'), act: () => collect('key') },
-  ], draw: () => { if (!has('key') && IMG.keys) ctx.drawImage(IMG.keys, 835, 405, 120, 121); } },
+    { x: 720, y: 60, w: 340, h: 480, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
+  ] },
   cellDoor: { arrows: { down: 'hall' }, spots: [
     { x: 436, y: 120, w: 797, h: 884, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: cellDoorAct },
     { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: openKeypad },
   ], draw: drawCellBars },
-  gate: { arrows: { up: 'hall' }, spots: [
-    { x: 330, y: 330, w: 1320, h: 760, label: 'Đi vào khu tự trị', go: 'hall', sfx: 'door' },
+  gate: { arrows: { left: () => dialog([L.notyet]) }, spots: [
+    { x: 330, y: 330, w: 1320, h: 760, label: 'Vào khu nhà', act: enterCompound },
   ] },
   cells: { arrows: { down: 'cellDoor' }, spots: [
     { x: 985, y: 125, w: 215, h: 955, label: 'Phòng 602', act: () => cellAct(602) },
     { x: 760, y: 365, w: 85, h: 635, label: 'Phòng 609', act: () => cellAct(609) },
     { x: 630, y: 450, w: 50, h: 500, label: 'Phòng 601', act: () => cellAct(601) },
-    { x: 340, y: 510, w: 145, h: 390, label: 'Phòng 603', act: () => cellAct(603) },
+    { x: 340, y: 510, w: 145, h: 390, label: 'Buồng cuối dãy (603)', act: () => cellAct(603) },
   ] },
 };
 const lbl = s => typeof s.label === 'function' ? s.label() : s.label;
@@ -213,7 +216,7 @@ const spotsOf = v => VIEWS[v].spots.filter(s => !s.cond || s.cond());
 
 function drawPcLabels() {
   ctx.font = '30px VT323, monospace'; ctx.fillStyle = '#2b2b24';
-  ['Ho_so_nhan_su' + (G.flags.folder ? '' : ' 🔒'), 'Kich_ban', 'KPI', 'Anh'].forEach((t, i) => ctx.fillText(t, 618, 214 + i * 76));
+  ['KICH_BAN', 'DANH_SACH', 'HO_SO_MAT' + (G.flags.folder ? '' : ' 🔒'), 'THUNG_RAC'].forEach((t, i) => ctx.fillText(t, 618, 214 + i * 76));
 }
 function drawCellBars() {
   if (G.flags.gate) return;
@@ -237,10 +240,6 @@ function go(view, sfx) {
     ui.fade.classList.remove('on');
     setTimeout(() => {
       G.busy = false;
-      if (view === 'hall' && !G.flags.intro) {
-        G.flags.intro = true;
-        dialog([L.intro], () => { D.t = 3; G.grace = 4; D.greeted = false; });
-      }
     }, 120);
   }, 220);
 }
@@ -277,23 +276,35 @@ function nextLine() {
 }
 ui.dialog.addEventListener('pointerdown', e => { e.stopPropagation(); nextLine(); });
 const L = {
-  intro: { who: 'dai', v: 'intro_dai', text: 'Ê thằng mới! Mày ngồi máy số 4, lo mà làm đi. Hông làm là ăn điện nghe chưa!' },
-  note: { who: 'ti', v: 'note_ti', text: 'Trời đất ơi, mật khẩu dán chình ình trên sổ luôn. St5K, nhớ nè!' },
-  pclock: { who: 'ti', v: 'pclock_ti', text: 'Có khóa nè trời. Mật khẩu ở đâu ta?' },
-  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai bét rồi!' },
-  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'An Yên, phòng 603! Giờ kiếm mật khẩu cửa phòng giam.' },
-  clock: { who: 'ti', v: 'clock_ti', text: 'Số 4 xanh lè trên đồng hồ. Nhớ nè!' },
-  paper: { who: 'ti', v: 'paper_ti', text: 'Lục thùng rác ra được số 20. Hên dữ thần!' },
-  cup: { who: 'ti', v: 'cup_ti', text: 'Cái ly có số 2 nè. Ghi lại liền!' },
-  k: { who: 'ti', v: 'k_ti', text: 'Chữ K vàng chóe trên bảng KPI. Lụm!' },
-  all4: { who: 'ti', v: 'all4_ti', text: 'Đủ 4 ký tự rồi! Ra cửa phòng giam thử coi.' },
-  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa số. Phải có mật khẩu mới vô được.' },
-  kpok: { who: 'ti', v: 'kpok_ti', text: 'Mở rồi! Dễ như ăn cháo!' },
-  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Bíp bíp! Sai rồi, bình tĩnh, bình tĩnh...' },
-  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa treo trên đầu nai. Lụm liền!' },
-  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em! Chìa khóa nằm bên phòng ông trùm á!' },
-  wrongcell: { who: 'ti', v: 'wrongcell_ti', text: 'Hông phải phòng này.' },
-  rescue: { who: 'ti', v: 'rescue_ti', text: 'An Yên! Anh tới rồi, mình về nhà thôi!' },
+  gate1: { who: 'ti', v: 'gate1_ti', text: 'Đây rồi. Theo tin báo, An Yên bị giam trong khu nhà này.' },
+  gate2: { who: 'ti', v: 'gate2_ti', text: 'Cứ giả làm người đi xin việc. Vào được bên trong rồi tính tiếp.' },
+  notyet: { who: 'ti', v: 'notyet_ti', text: 'Chưa được. An Yên vẫn còn ở trong đó.' },
+  wake: { who: 'dai', v: 'wake_dai', text: 'Tỉnh rồi hả? Từ giờ mày là người của tao.' },
+  intro: { who: 'dai', v: 'intro_dai', text: 'Mày vào ngồi ở máy 04, lo mà làm đi nếu không muốn bị chích điện.' },
+  endure: { who: 'ti', v: 'endure_ti', text: '(Phải nhịn. Vào văn phòng, tìm cách mở máy 04 trước đã.)' },
+  watch: { who: 'ti', v: 'watch_ti', text: 'Anh Đại đang để mắt tới mình. Phải vào máy 04 trước, đừng để bị nghi.' },
+  note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ của người ngồi bàn này. Mẩu giấy dán ghi: St5K.' },
+  note2: { who: 'ti', v: 'note2_ti', text: 'Có khi là mật khẩu của thư mục trong máy 04?' },
+  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy này đã tắt. Mấy tờ giấy dán đầy những số điện thoại lạ.' },
+  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai rồi. Mật khẩu chắc ghi đâu đó quanh bàn này.' },
+  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi! Hồ sơ của An Yên... cô ấy bị nhốt ở buồng cuối dãy phòng giam.' },
+  pcopen2: { who: 'ti', v: 'pcopen2_ti', text: 'Còn đây là ghi chú mã cửa khu giam. Thêm nữa, chìa khóa buồng do anh Đại giữ trong phòng riêng.' },
+  board: { who: 'ti', v: 'board_ti', text: 'Bảng ghim toàn ảnh thẻ của những người làm ở đây. Có cả ảnh An Yên.' },
+  clock: { who: 'ti', v: 'clock_ti', text: 'Đồng hồ này hỏng. Kim giây cứ giật mãi ở số 4, ai đó còn tô xanh con số.' },
+  paper: { who: 'ti', v: 'paper_ti', text: 'Một mẩu giấy vò nát trong thùng rác. Số 20 được viết bằng mực xanh.' },
+  cup: { who: 'ti', v: 'cup_ti', text: 'Ly giấy có số 2 viết bằng mực xanh. Giống nét chữ trên mẩu giấy số 20.' },
+  k: { who: 'ti', v: 'k_ti', text: 'Chữ K trong "KPI" được tô vàng đậm hơn hẳn. Lại một manh mối nữa.' },
+  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa bằng mã. Ghi chú trong hồ sơ có nói cách ghép mã.' },
+  kpok: { who: 'ti', v: 'kpok_ti', text: 'Bảng điện tử kêu "bíp". Song sắt từ từ kéo lên.' },
+  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Sai mã rồi. Xem lại thứ tự trong ghi chú.' },
+  skull: { who: 'ti', v: 'skull_ti', text: 'Có thứ gì đó lủng lẳng trong miệng cái đầu hươu...' },
+  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa giấu trong miệng đầu hươu! Chắc chắn có chìa buồng giam.' },
+  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em! Chìa khóa do anh Đại giữ, cất trong phòng riêng!' },
+  wrongcell: { who: 'ti', v: 'wrongcell_ti', text: 'Không phải buồng này. An Yên ở buồng cuối dãy.' },
+  yen1: { who: 'yen', v: 'yen1_yen', text: 'Anh... anh đến cứu em thật sao?' },
+  ti1: { who: 'ti', v: 'ti1_ti', text: 'Anh là Tí, công an. Gia đình em đã báo tin. Mình phải đi ngay.' },
+  yen2: { who: 'yen', v: 'yen2_yen', text: 'Em tưởng sẽ không bao giờ được về nhà nữa...' },
+  ti2: { who: 'ti', v: 'ti2_ti', text: 'Bám sát anh. Ra khỏi cổng là an toàn.' },
   caught: { who: 'dai', v: 'caught_dai', text: 'Lảng vảng làm gì đó hả? Ăn điện nè!' },
   afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Về chỗ ngồi chạy KPI cho tao!' },
   gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nha. Mày ở lại đây luôn đi!' },
@@ -302,7 +313,7 @@ const L = {
 /* ---------------- Inventory ---------------- */
 const ITEMS = {
   note: { img: 'props/binder.png', t: 'St5K', name: 'Sổ St5K' },
-  file: { img: 'chars/yen.png', t: '602', name: 'Hồ sơ An Yên' },
+  file: { img: 'chars/yen.png', t: '', name: 'Hồ sơ An Yên' },
   cup: { img: 'props/cup.png', t: '2', name: 'Ly số 2' },
   clock: { img: 'props/clock.png', t: '4', name: 'Đồng hồ số 4' },
   k: { img: 'props/k.png', t: 'K', name: 'Chữ K' },
@@ -316,13 +327,16 @@ function renderInv() {
 const ZOOM = { note: 'props/binder.png', clock: 'props/clock.png', paper: 'props/paper20.png', cup: 'props/cup.png', k: 'props/k.png', key: 'props/keys.png' };
 function collect(id) {
   if (has(id)) { showZoom(ZOOM[id]); return; }
-  showZoom(ZOOM[id]);
-  SFX.pick();
-  dialog([L[id]], () => {
+  const finish = () => {
     closeOverlay(); G.inv.add(id); renderInv();
     if (id === 'key') { G.alarm = true; G.countdown = 60; bgm('alarm'); toast('Ông trùm sắp phát hiện mất chìa khóa! Nhanh lên!', 3200); }
-    if (LETTERS.includes(id) && LETTERS.every(has) && !G.flags.all4) { G.flags.all4 = true; dialog([L.all4]); }
-  });
+  };
+  if (id === 'key') {
+    return dialog([L.skull], () => { showZoom(ZOOM.key); SFX.pick(); dialog([L.key], finish); });
+  }
+  showZoom(ZOOM[id]);
+  SFX.pick();
+  dialog(id === 'note' ? [L.note, L.note2] : [L[id]], finish);
 }
 
 /* ---------------- Overlays ---------------- */
@@ -348,16 +362,15 @@ function openFolder(f) {
   };
   ui.overlay.onpointerdown = e => { if (e.target === ui.overlay) closeOverlay(); };
   if (f === 'hoso') {
-    if (G.flags.folder) return win('Ho_so_nhan_su', profileHTML());
-    const wb = win('Ho_so_nhan_su', `To use this folder, you need Enter Password<br><input id="pw" maxlength="8" autocomplete="off" spellcheck="false"><button id="pwok">OK</button><div id="pwmsg"></div>`);
+    if (G.flags.folder) return win('HỒ SƠ MẬT', profileHTML());
+    const wb = win('NHẬP MẬT KHẨU', `Thư mục được bảo vệ. Nhập mật khẩu:<br><input id="pw" maxlength="8" autocomplete="off" spellcheck="false"><button id="pwok">MỞ</button><div id="pwmsg"></div>`);
     const inp = wb.querySelector('#pw'); setTimeout(() => inp.focus(), 50);
-    if (!G.flags.triedPc && !has('note')) { G.flags.triedPc = true; dialog([L.pclock], () => inp.focus()); }
     const submit = () => {
       if (inp.value.trim().toLowerCase() === 'st5k') {
         SFX.ok(); G.flags.folder = true; G.inv.add('file'); renderInv();
-        wb.innerHTML = profileHTML(); dialog([L.pcopen]);
+        wb.innerHTML = profileHTML(); ui.overlay.querySelector('.tb span').textContent = 'HỒ SƠ MẬT'; dialog([L.pcopen, L.pcopen2]);
       } else {
-        SFX.wrong(); wb.querySelector('#pwmsg').innerHTML = '<span class="err">Wrong password!</span>';
+        SFX.wrong(); wb.querySelector('#pwmsg').innerHTML = '<span class="err">Sai mật khẩu!</span>';
         const w = ui.overlay.querySelector('.pcwin'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
         inp.select(); if (!G.flags.saidWrong) { G.flags.saidWrong = true; dialog([L.pcwrong], () => inp.focus()); }
       }
@@ -365,16 +378,17 @@ function openFolder(f) {
     wb.querySelector('#pwok').onclick = submit;
     inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') submit(); if (e.key === 'Escape') closeOverlay(); });
   } else if (f === 'kichban') {
-    win('Kich_ban.txt', `<b>KỊCH BẢN 1:</b> "Việc nhẹ lương cao" bên Campuchia, bao vé máy bay. Tới nơi thu hộ chiếu.<br><br><b>KỊCH BẢN 2:</b> Giả danh công an gọi báo "tài khoản dính rửa tiền", bắt chuyển tiền "xác minh".<br><br><span class="hl">Công an thật không bao giờ bắt chuyển tiền qua điện thoại!</span>`);
-  } else if (f === 'kpi') {
-    win('KPI.xls', `<table><tr><th>Mã</th><th>Doanh thu</th><th>Ghi chú</th></tr><tr><td>03-VAN</td><td>107%</td><td>✓</td></tr><tr><td>02-THI</td><td>67%</td><td>✓</td></tr><tr><td>04-TÍ</td><td>...</td><td>...</td></tr><tr><td>01-ANYEN</td><td class="err">6%</td><td class="err">FAILED</td></tr></table>`);
+    win('KỊCH BẢN GỌI ĐIỆN', `Bước 1: Xưng là nhân viên ngân hàng / công an / bưu điện.<br>Bước 2: Báo "tài khoản có dấu hiệu bất thường" hoặc "trúng thưởng".<br>Bước 3: Hối thúc, đe dọa, không cho nạn nhân thời gian suy nghĩ.<br>Bước 4: Yêu cầu chuyển tiền vào "tài khoản an toàn".<br><br><span class="hl">(Tí: Nhớ kỹ. Ra ngoài phải cảnh báo mọi người.)</span>`);
+  } else if (f === 'danhsach') {
+    win('DANH SÁCH KHÁCH HÀNG', `0912xxx – Bà N., 67 tuổi — đã chuyển 2 lần<br>0906xxx – Anh T., sinh viên — đang "chăm sóc"<br>0903xxx – Chị H. — từ chối, gọi lại sau<br><br><span class="err">(Hàng trăm số điện thoại nữa... Toàn là người thật.)</span>`);
   } else {
-    win('Anh', 'Ảnh hộ chiếu của những người mới bị lừa sang...<br><br><span class="err">(Bọn chúng giữ giấy tờ để không ai trốn được.)</span>');
+    win('THÙNG RÁC', 'Trống rỗng. Ai đó đã xóa sạch dấu vết.');
   }
 }
 function profileHTML() {
   return `<div class="profile"><div class="ph" style="background-image:url(${A('chars/yen.png')})"></div>
-    <div>Name: <b>Nguyễn An Yên</b><br>Date: 01-04-2007<br>Born: Việt Nam<br>Status: <span class="err">FAILED KPI</span><br>Prison cell: <span class="hl"><b>603</b></span></div></div>`;
+    <div>HỒ SƠ: <b>NGUYEN AN YEN</b> — mã 01<br>Tình trạng: không chịu làm việc, KPI 6% — <span class="err">FAILED</span><br>Xử lý: nhốt <span class="hl"><b>BUỒNG CUỐI DÃY</b></span> khu giam.</div></div>
+    <div style="margin-top:10px">GHI CHÚ AN NINH — MÃ CỬA KHU GIAM:<br><span class="hl">[số trên mẩu giấy trong thùng rác] + [số kim đồng hồ văn phòng] + [số trên ly nước hành lang] + [chữ cái tô vàng trên bảng KPI]</span><br><br>Chìa khóa các buồng: anh Đại giữ, cất trong phòng riêng.</div>`;
 }
 
 /* --- Keypad of the prison door --- */
@@ -392,7 +406,7 @@ function openKeypad() {
     SFX.key();
     if (k === '⌫') code = code.slice(0, -1);
     else if (k === 'OK') {
-      if (code === '24K20') { SFX.ok(); SFX.door(); G.flags.gate = true; closeOverlay(true); dialog([L.kpok]); return; }
+      if (code === '2042K') { SFX.ok(); SFX.door(); G.flags.gate = true; closeOverlay(true); dialog([L.kpok]); return; }
       SFX.wrong(); code = ''; msg.textContent = 'SAI MẬT MÃ';
       scr.classList.remove('shake'); void scr.offsetWidth; scr.classList.add('shake');
       if (D.area === AREA[G.view]) G.det = Math.min(99, G.det + 15);
@@ -416,7 +430,7 @@ function cellAct(n) {
   if (n !== 603) return dialog([L.wrongcell]);
   if (!has('key')) return dialog([L.nokey]);
   SFX.door(); G.flags.rescued = true; G.alarm = false;
-  dialog([L.rescue], () => playVideo('cut3', missionComplete));
+  dialog([L.yen1, L.ti1, L.yen2, L.ti2], () => playVideo('cut3', missionComplete));
 }
 
 /* ---------------- Cutscenes ---------------- */
@@ -578,30 +592,40 @@ function gameOver() {
 }
 
 /* ---------------- Flow ---------------- */
+function enterCompound() {
+  if (G.flags.entered) return;
+  G.flags.entered = true; ui.hud.classList.add('hidden');
+  playVideo('cut2', () => {
+    G.view = 'hall'; ui.hud.classList.remove('hidden');
+    dialog([L.wake, L.intro, L.endure], () => { D.t = 3; G.grace = 4; D.greeted = false; });
+  });
+}
 function startGame() {
   hideScreen(); newGame(); renderInv(); bgm(null);
   playVideo('cut1', () => {
     G.mode = 'play'; G.view = 'gate'; ui.hud.classList.remove('hidden'); bgm('calm');
-    toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000);
+    dialog([L.gate1, L.gate2], () => toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000));
   });
 }
 function objective() {
   const n = LETTERS.filter(has).length;
-  if (has('key')) return 'Giải cứu An Yên ở phòng 603 (cuối hành lang)!';
-  if (G.flags.gate) return 'Tìm chìa khóa phòng giam';
-  if (G.flags.folder) return `Tìm 4 ký tự để mở cửa phòng giam (${n}/4)`;
-  return 'Mở hồ sơ trong máy số 4';
+  if (has('key')) return 'Giải cứu An Yên ở buồng cuối dãy.';
+  if (G.flags.gate) return 'Lấy chìa khóa buồng giam trong phòng anh Đại.';
+  if (G.flags.folder) return `Tìm 4 manh mối và mở cửa khu phòng giam. (${n}/4)`;
+  if (G.flags.entered) return 'Vào văn phòng, mở thư mục bị khóa trong máy 04.';
+  return 'Vào khu nhà tìm An Yên.';
 }
 function hint() {
   let t;
-  if (has('key')) t = 'Ra cửa CELL ở hành lang, vào phòng giam và mở phòng 603 ở cuối hành lang.';
-  else if (G.flags.gate) t = 'Chìa khóa treo ở đầu nai trong phòng ông trùm (cửa gỗ cạnh bảng KPI). Vào lúc hắn đi tuần chỗ khác.';
+  if (has('key')) t = 'Ra cửa CELL ở hành lang, vào phòng giam, mở buồng cuối dãy (603).';
+  else if (G.flags.gate) t = 'Chìa khóa giấu trong miệng đầu hươu ở phòng anh Đại (cửa gỗ cạnh bảng KPI). Vào lúc hắn đi tuần chỗ khác.';
   else if (G.flags.folder) {
     const where = { cup: 'cái ly ở máy lọc nước (hành lang)', clock: 'đồng hồ (góc phòng làm việc)', k: 'bảng KPI (hành lang)', paper: 'thùng rác (góc phòng làm việc)' };
     const miss = LETTERS.filter(c => !has(c)).map(c => where[c]);
-    t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Nhập 2 4 K 20 vào bàn phím cạnh cửa CELL.';
-  } else if (has('note')) t = 'Bấm vào màn hình máy số 4, mở folder Ho_so_nhan_su, nhập mật khẩu trên cuốn sổ.';
-  else t = 'Tới bàn máy số 4, xem cuốn sổ có tờ giấy nhớ.';
+    t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Ghép theo ghi chú: giấy (20) + đồng hồ (4) + ly (2) + chữ (K) = 2042K. Nhập ở bàn phím cạnh cửa CELL.';
+  } else if (has('note')) t = 'Bấm vào màn hình máy 04, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
+  else if (G.flags.entered) t = 'Vào văn phòng (cửa OFFICE), tới bàn máy 04, xem cuốn sổ trên bàn.';
+  else t = 'Bấm vào cổng để vào khu nhà.';
   toast('💡 ' + t, 5000);
 }
 
@@ -614,6 +638,7 @@ function arrowRects() {
   if (a.right) r.push({ dir: 'right', to: a.right, x: 1780, y: 480, w: 120, h: 120 });
   return r;
 }
+const nav = to => typeof to === 'function' ? to() : go(to);
 const inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 const canInteract = () => G.mode === 'play' && !G.dlg && !G.paused && !G.video && !G.busy && !G.overlay;
 cv.addEventListener('pointermove', e => {
@@ -631,10 +656,11 @@ cv.addEventListener('pointerdown', e => {
   if (!canInteract()) return;
   const p = toStage(e);
   const a = arrowRects().find(r => inRect(p, r));
-  if (a) { go(a.to); return; }
+  if (a) { nav(a.to); return; }
   const s = spotsOf(G.view).find(s => inRect(p, s));
   if (!s) return;
   ui.tip.classList.remove('on');
+  if (s.lock && !G.flags.folder) return dialog([L.watch]);
   if (s.go) go(s.go, s.sfx); else s.act();
 });
 addEventListener('keydown', e => {
@@ -650,10 +676,10 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { G.paused ? resume() : showPause(); return; }
   if (G.paused || G.busy) return;
   const a = VIEWS[G.view].arrows;
-  if (e.key === 'ArrowDown' && a.down) { e.preventDefault(); go(a.down); }
-  if (e.key === 'ArrowUp' && a.up) { e.preventDefault(); go(a.up); }
-  if (e.key === 'ArrowLeft' && a.left) { e.preventDefault(); go(a.left); }
-  if (e.key === 'ArrowRight' && a.right) { e.preventDefault(); go(a.right); }
+  if (e.key === 'ArrowDown' && a.down) { e.preventDefault(); nav(a.down); }
+  if (e.key === 'ArrowUp' && a.up) { e.preventDefault(); nav(a.up); }
+  if (e.key === 'ArrowLeft' && a.left) { e.preventDefault(); nav(a.left); }
+  if (e.key === 'ArrowRight' && a.right) { e.preventDefault(); nav(a.right); }
   if (e.key === 'h' || e.key === 'H') hint();
 });
 $('#btn-pause').onclick = () => { ac(); SFX.click(); showPause(); };

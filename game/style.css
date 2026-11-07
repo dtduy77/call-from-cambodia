@@ -85,10 +85,10 @@ button{font-family:inherit;cursor:pointer}
 .kp-keys .del{background:#e7a08f}
 .kp-msg{color:#c9d6c8;font-size:24px;min-height:32px;font-weight:600}
 
-.pcwin{position:absolute;left:676px;top:166px;width:560px;height:440px;background:#eeeadc;border:4px solid var(--ink);display:flex;flex-direction:column;font-family:"VT323",monospace;animation:pop .2s}
+.pcwin{position:absolute;left:560px;top:120px;width:860px;height:560px;background:#eeeadc;border:4px solid var(--ink);display:flex;flex-direction:column;font-family:"VT323",monospace;animation:pop .2s}
 .pcwin .tb{background:#2f4f8f;color:#fff;font-size:30px;padding:2px 10px;display:flex;justify-content:space-between}
 .pcwin .tb b{cursor:pointer;padding:0 8px;background:var(--red)}
-.pcwin .wb{flex:1;padding:14px 18px;font-size:30px;line-height:1.15;overflow:auto;color:#1b1b1b}
+.pcwin .wb{flex:1;padding:14px 20px;font-size:31px;line-height:1.2;overflow:auto;color:#1b1b1b}
 .pcwin input{font-family:"VT323",monospace;font-size:44px;width:240px;padding:0 10px;border:4px solid var(--ink);letter-spacing:.2em;margin:8px 0}
 .pcwin button{font-family:"VT323",monospace;font-size:32px;border:3px solid var(--ink);background:#ddd;padding:0 16px;margin-left:8px}
 .pcwin .err{color:var(--red)}
