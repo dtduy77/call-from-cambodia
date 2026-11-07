@@ -14,23 +14,24 @@ Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ v�
 - `assets/v2/voice/`: 33 câu thoại tạo bằng VieNeu-TTS v3 Turbo (Apache-2.0, chạy offline): Tí = giọng Adam (Nam, nâng tông 12%), Anh Đại = Đức Trí (Nam, trầm), An Yên = Thục Đoan (nữ Nam). Thay bằng giọng thu thật thì làm theo `VOICE_SCRIPT.md`.
 
 ## Bản đồ góc nhìn
+Luồng theo prototype Figma (frame f04 → f56) và deck `source/cuoc goi tu campuchia` (slide 24–40).
 ```
-gate (cổng, Tí độc thoại) → bấm cổng → cut2 (bị chích điện) → hall (Anh Đại: "Tỉnh rồi hả?...")
+gate (cổng) → bấm cổng → cut2 (bị chích điện) → hall (Anh Đại giao việc)
+hall ─┬─ → hallOffice (cửa OFFICE, slide 33) ─↗─ pc (ngồi máy 04 của Tí, slide 34: KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC)
+      │                                           ├─ → desk (bàn dán giấy note, slide 35) ─ → desk2 (bàn có cuốn sổ St5K)
+      │                                           └─ ← office (toàn cảnh, slide 36) ─┬─↗ corner (đồng hồ số 4, thùng rác số 20, slide 37)
+      │                                                                              └─↑ ra hall
+      ├─ ← hallWater (ly số 2)
+      ├─ ↑ hallKPI (chữ K) ─↑─ boss ─┬─ bossLeft
+      │                              └─ bossRight (đầu hươu, chùm chìa khóa giấu trong miệng)
+      └─ ↑ cellDoor (keypad 2042K = giấy 20 + đồng hồ 4 + ly 2 + chữ K) ── cells (buồng 603 cuối dãy) → cut3 → Mission Complete → The End
+```
 Trước khi mở được HO_SO_MAT, bấm máy lọc nước / CELL / KPI ở hành lang sẽ bị chặn ("Anh Đại đang để mắt tới mình").
-office ─┬─ desk (bàn máy 04 của Tí, slide 35) ── pc (màn hình máy 04, slide 34: KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC)
-        ├─ desk2 (bàn người khác, có cuốn sổ dán mật khẩu St5K)
-        ├─ corner (đồng hồ số 4, thùng rác số 20)
-        └─↓ hallOffice ─← hall ─┬─ hallWater (ly số 2)
-                                ├─ hallKPI (chữ K) ── cửa gỗ ── boss ─┬─ bossLeft
-                                │                                      └─ bossRight (đầu hươu, chùm chìa khóa giấu trong miệng)
-                                └─ cellDoor (keypad 2042K = giấy 20 + đồng hồ 4 + ly 2 + chữ K) ── cells (cửa 603 ở cuối hành lang, chiếu cut3, rồi Mission Complete, rồi The End)
-```
-Tọa độ điểm click (`spots`) và mũi tên (`nav`) nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh. Ở góc nhìn văn phòng có biển "MÁY 04 · CHỖ CỦA TÍ" chỉ bàn an toàn.
-
-Khu văn phòng theo deck `source/cuoc goi tu campuchia` slide 32–37: 33 cửa OFFICE (`hallOffice`), 34 màn hình máy 04 (`pc`), 35 bàn máy 04 (`desk`), 36 toàn cảnh (`office`), 37 góc bảng ghim (`corner`).
+Chỗ an toàn khi Anh Đại đi tuần: ngồi đúng màn hình máy 04 (`pc`).
+Tọa độ điểm click (`spots`) và mũi tên (`nav`) nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh.
 
 ## Anh Đại đi tuần
-Lộ trình: phòng ông trùm, hành lang, phòng làm việc, hành lang, lặp lại. Trước khi ổng tới khu vực bạn đang đứng khoảng 4 giây sẽ có cảnh báo tiếng bước chân. Đứng ở góc nhìn `desk` hoặc `pc` (bàn máy số 4) thì an toàn. Ở các góc khác, thanh nghi ngờ sẽ tăng. Đầy thanh thì chiếu cut2 và mất 1 mạng. Mất đủ 3 mạng là thua. Lấy được chìa khóa thì có 60 giây.
+Lộ trình: phòng ông trùm, hành lang, phòng làm việc, hành lang, lặp lại. Trước khi ổng tới khu vực bạn đang đứng khoảng 4 giây sẽ có cảnh báo tiếng bước chân. Ngồi ở màn hình máy 04 (`pc`) thì an toàn. Ở các góc khác, thanh nghi ngờ sẽ tăng. Đầy thanh thì chiếu cut2 và mất 1 mạng. Mất đủ 3 mạng là thua. Lấy được chìa khóa thì có 60 giây.
 
 ## Nguồn nội dung
 Lời thoại, nội dung các thư mục máy 04, mã 2042K và luồng mở đầu lấy theo video demo của nhóm (`source/d510666f-...mp4`). Câu thứ hai khi mở hồ sơ ("Còn đây là ghi chú...") bị cắt trong video nên mình tự viết tiếp. Cơ chế Anh Đại đi tuần và giao diện giữ như bản trước.

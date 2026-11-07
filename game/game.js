@@ -136,7 +136,7 @@ const fmt = s => { s = Math.max(0, Math.ceil(s)); return String(Math.floor(s / 6
 const G = { mode: 'loading' };
 const D = {};
 const AREA = { office: 'office', desk: 'office', desk2: 'office', pc: 'office', corner: 'office', hallOffice: 'hall', hall: 'hall', hallWater: 'hall', hallKPI: 'hall', cellDoor: 'hall', boss: 'boss', bossLeft: 'boss', bossRight: 'boss', cells: 'cells', gate: 'outside' };
-const SAFE = new Set(['desk', 'pc']);
+const SAFE = new Set(['pc']); // ngồi đúng máy 04 thì an toàn
 const ROUTE = ['boss', 'hall', 'office', 'hall'];
 const STAY = { boss: 14, hall: 7, office: 9 };
 const AREA_NAME = { office: 'phòng làm việc', hall: 'hành lang', boss: 'phòng ông trùm', cells: 'phòng giam' };
@@ -172,35 +172,32 @@ const VIEWS = {
     { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
   ] },
-  hallOffice: { dai: { x: 400, h: 860 }, nav: [NF(1160, 930, 'office', 'Vào văn phòng'), NB('hall', 'Ra hành lang')], spots: [
-    { x: 720, y: 153, w: 894, h: 785, label: 'Vào văn phòng', go: 'office' },
+  hallOffice: { dai: { x: 400, h: 860 }, nav: [NF(1160, 930, 'pc', 'Vào ngồi máy 04'), NL('hall', 'Hành lang')], spots: [
+    { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
   ] },
-  office: { dai: { x: 760, h: 880 }, nav: [
-    NF(1380, 905, 'desk', 'Bàn máy 04 (chỗ của mình)'),
-    NF(470, 905, 'desk2', 'Bàn máy khác'),
-    NR('corner', 'Góc bảng ghim · đồng hồ'),
-    NB('hallOffice', 'Ra hành lang'),
-  ], spots: [
-    { x: 993, y: 700, w: 665, h: 340, label: 'Bàn máy 04 (chỗ của mình)', go: 'desk' },
-    { x: 218, y: 700, w: 742, h: 340, label: 'Bàn máy khác', go: 'desk2' },
-    { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
-  ], draw: drawDeskTag },
-  // bàn máy 04 của Tí (slide 35) → màn hình máy 04 (slide 34)
-  desk: { nav: [NF(560, 330, 'pc', 'Mở máy 04'), NB('office', 'Đứng dậy')], spots: [
-    { x: 235, y: 45, w: 640, h: 590, label: 'Màn hình máy 04', go: 'pc' },
-  ] },
-  // bàn người khác: còn mở máy, có cuốn sổ dán mật khẩu
-  desk2: { nav: [NB('office')], spots: [
-    { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
-    { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
-  ] },
-  pc: { nav: [NB('desk', 'Rời màn hình')], spots: [
+  // Văn phòng theo prototype Figma (f06 → f13): vào là ngồi ngay máy 04 của Tí;
+  // quay phải: bàn dán giấy note (slide 35) → bàn có cuốn sổ St5K; quay trái: toàn cảnh (slide 36) → góc bảng ghim.
+  pc: { nav: [NL('office', 'Nhìn quanh văn phòng'), NR('desk', 'Bàn bên phải')], spots: [
     { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
     { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
     { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
     { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
-  corner: { nav: [NB('office')], spots: [
+  desk: { nav: [NL('pc', 'Về máy 04'), NR('desk2', 'Bàn kế tiếp')], spots: [
+    { x: 235, y: 45, w: 640, h: 590, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
+  ] },
+  desk2: { nav: [NL('desk', 'Quay lại')], spots: [
+    { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
+    { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
+  ] },
+  office: { dai: { x: 760, h: 880 }, nav: [
+    NF(1360, 730, 'corner', 'Góc bảng ghim · đồng hồ'),
+    NF(800, 770, 'hall', 'Ra hành lang'),
+    NR('pc', 'Về máy 04'),
+  ], spots: [
+    { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
+  ] },
+  corner: { nav: [NL('office', 'Quay lại văn phòng')], spots: [
     { x: 268, y: 100, w: 576, h: 350, label: 'Bảng ghim', act: () => dialog([L.board]) },
     { x: 980, y: 40, w: 300, h: 320, label: 'Đồng hồ', shape: 'ellipse', act: () => collect('clock') },
     { x: 1150, y: 605, w: 300, h: 380, label: 'Thùng rác', act: () => collect('paper') },
@@ -237,16 +234,6 @@ const spotsOf = v => VIEWS[v].spots.filter(s => !s.cond || s.cond());
 function drawPcLabels() {
   ctx.font = '30px VT323, monospace'; ctx.fillStyle = '#2b2b24';
   ['KICH_BAN', 'DANH_SACH', 'HO_SO_MAT' + (G.flags.folder ? '' : ' 🔒'), 'THUNG_RAC'].forEach((t, i) => ctx.fillText(t, 618, 214 + i * 76));
-}
-function drawDeskTag() {
-  // tấm biển nhỏ chỉ rõ bàn của Tí, để lúc chạy về khỏi lạc
-  const x = 1380, y = 668 + Math.sin(G.t * 3) * 4;
-  ctx.save(); ctx.font = '800 26px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
-  const t = 'MÁY 04 · CHỖ CỦA TÍ', w = ctx.measureText(t).width + 36;
-  ctx.fillStyle = 'rgba(226,203,178,.95)'; ctx.strokeStyle = '#16181c'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.roundRect(x - w / 2, y - 24, w, 46, 8); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x - 14, y + 22); ctx.lineTo(x, y + 40); ctx.lineTo(x + 14, y + 22); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#c8342b'; ctx.fillText(t, x, y + 9); ctx.restore();
 }
 function drawCellBars() {
   if (G.flags.gate) return;
@@ -317,6 +304,7 @@ const L = {
   good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi làm vậy mới ngoan nghen.' },
   note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ có dán mật khẩu: St5K. Dán ngay trên bàn luôn, bảo mật dữ thần!' },
   note2: { who: 'ti', v: 'note2_ti', text: 'Chắc là mật khẩu thư mục bị khóa trong máy 04. Thử liền!' },
+  desk1: { who: 'ti', v: 'desk1_ti', text: 'Máy này tắt rồi. Dán đầy giấy ghi số điện thoại lạ, chắc là danh sách người bị lừa.' },
   desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy bàn bên còn mở app nhắn tin, toàn kịch bản dụ người ta chuyển tiền. Ghê thiệt!' },
   pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai rồi. Mật khẩu chắc ghi đâu đó quanh mấy cái bàn này thôi.' },
   pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi! Hồ sơ ghi An Yên bị nhốt ở buồng cuối dãy phòng giam.' },
@@ -521,7 +509,7 @@ function caught(reason) {
     if (G.lives <= 0) return dialog([L.gameover], gameOver);
     if (has('key') && !G.flags.rescued) { G.inv.delete('key'); G.alarm = false; bgm('calm'); renderInv(); toast('Ông trùm đã lấy lại chùm chìa khóa.'); }
     dialog([L.afterzap], () => {
-      G.view = 'desk'; G.grace = 2;
+      G.view = 'pc'; G.grace = 2;
       Object.assign(D, { area: 'office', idx: 2, t: 2.5, warned: false, greeted: true });
     });
   }));
@@ -689,8 +677,8 @@ function hint() {
     const where = { cup: 'cái ly ở máy lọc nước (hành lang)', clock: 'đồng hồ (góc phòng làm việc)', k: 'bảng KPI (hành lang)', paper: 'thùng rác (góc phòng làm việc)' };
     const miss = LETTERS.filter(c => !has(c)).map(c => where[c]);
     t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Ghép theo ghi chú: giấy (20) + đồng hồ (4) + ly (2) + chữ (K) = 2042K. Nhập ở bàn phím cạnh cửa CELL.';
-  } else if (has('note')) t = 'Về bàn máy 04 (có biển MÁY 04), bấm vào màn hình, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
-  else if (G.flags.entered) t = 'Vào văn phòng (cửa OFFICE). Cuốn sổ có mật khẩu nằm ở bàn máy bên cạnh, rồi về bàn máy 04 mở máy.';
+  } else if (has('note')) t = 'Quay trái về máy 04, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
+  else if (G.flags.entered) t = 'Vào văn phòng (cửa OFFICE) là tới máy 04. Quay phải 2 lần tới bàn có cuốn sổ dán mật khẩu.';
   else t = 'Bấm vào cổng để vào khu nhà.';
   toast('💡 ' + t, 5000);
 }
