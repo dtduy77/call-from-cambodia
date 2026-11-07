@@ -217,8 +217,8 @@ const VIEWS = {
     { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: () => openKeypad() },
   ], draw: drawCellBars },
   cells: { nav: [AR(493, 779, -120, () => cellAct(603), 'Buồng cuối dãy (603)'), BK('cellDoor')], spots: [
-    { x: 985, y: 125, w: 215, h: 800, label: 'Phòng 602', act: () => cellAct(602) },
-    { x: 760, y: 365, w: 85, h: 560, label: 'Phòng 609', act: () => cellAct(609) },
+    { x: 985, y: 125, w: 218, h: 955, label: 'Phòng 602', act: () => cellAct(602) },
+    { x: 761, y: 382, w: 83, h: 690, label: 'Phòng 619', act: () => cellAct(619) },
     { x: 630, y: 450, w: 50, h: 480, label: 'Phòng 601', act: () => cellAct(601) },
     { x: 340, y: 510, w: 145, h: 390, label: 'Buồng cuối dãy (603)', act: () => cellAct(603) },
   ] },
