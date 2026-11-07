@@ -152,19 +152,15 @@ function newGame() {
 const has = id => G.inv.has(id);
 
 /* ---------------- Views & hotspots (1920×1080 art coordinates) ---------------- */
-// nav: NF = đi tới (mũi tên hướng lên, đặt ngay chỗ đi vào), NL / NR = quay trái / phải (mép màn hình), NB = quay lại (mũi tên chữ U ở giữa đáy)
+// nav: chỉ mũi tên trái / phải ở mép màn hình. Đi vào cửa, bàn, máy thì bấm thẳng vào vật đó (spots).
 const NF = (x, y, to, label, o = {}) => ({ dir: 'fwd', x, y, to, label, ...o });
 const NL = (to, label, o = {}) => ({ dir: 'left', x: 86, y: 540, to, label, ...o });
 const NR = (to, label, o = {}) => ({ dir: 'right', x: 1834, y: 540, to, label, ...o });
 const NB = (to, label = 'Quay lại') => ({ dir: 'back', x: 960, y: 1000, to, label });
 const VIEWS = {
-  gate: { nav: [NF(960, 820, () => enterCompound(), 'Vào khu nhà'), NB(() => dialog([L.notyet]), 'Bỏ về')], spots: [
-    { x: 330, y: 330, w: 1320, h: 560, label: 'Cổng khu nhà', act: () => enterCompound() },
-  ] },
+  gate: { nav: [], spots: [] }, // chỉ làm nền cho 2 câu thoại mở đầu, không chơi ở cổng
   hall: { dai: { x: 930, h: 720 }, nav: [
     NL('hallWater', 'Máy lọc nước', { lock: true }),
-    NF(800, 760, 'cellDoor', 'Cửa phòng giam (CELL)', { lock: true }),
-    NF(1235, 760, 'hallKPI', 'Bảng KPI · cửa gỗ', { lock: true }),
     NR('hallOffice', 'Văn phòng (máy 04)'),
   ], spots: [
     { x: 273, y: 240, w: 196, h: 415, label: 'Máy lọc nước', go: 'hallWater', lock: true },
@@ -172,7 +168,7 @@ const VIEWS = {
     { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
   ] },
-  hallOffice: { dai: { x: 400, h: 860 }, nav: [NF(1160, 930, 'pc', 'Vào ngồi máy 04'), NL('hall', 'Hành lang')], spots: [
+  hallOffice: { dai: { x: 400, h: 860 }, nav: [NL('hall', 'Hành lang')], spots: [
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
   ] },
   // Văn phòng theo prototype Figma (f06 → f13): vào là ngồi ngay máy 04 của Tí;
@@ -191,9 +187,8 @@ const VIEWS = {
     { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
   office: { dai: { x: 760, h: 880 }, nav: [
-    NF(1300, 670, 'corner', 'Góc bảng ghim · đồng hồ'),
-    NF(870, 650, 'hall', 'Ra hành lang'),
-    NR('pc', 'Về máy 04'),
+    NL('hall', 'Ra hành lang'),
+    NR('corner', 'Góc bảng ghim · đồng hồ'),
   ], spots: [
     // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra góc xéo bàn bên
     { x: 235, y: 735, w: 300, h: 170, label: 'Máy số 4 (của mình)', go: 'pc' },
@@ -207,26 +202,26 @@ const VIEWS = {
     { x: 980, y: 40, w: 300, h: 320, label: 'Đồng hồ', shape: 'ellipse', act: () => collect('clock') },
     { x: 1150, y: 605, w: 300, h: 380, label: 'Thùng rác', act: () => collect('paper') },
   ] },
-  hallWater: { nav: [NB('hall')], spots: [
+  hallWater: { nav: [NR('hall', 'Quay lại hành lang')], spots: [
     { x: 1190, y: 630, w: 110, h: 150, label: 'Cái ly', act: () => collect('cup') },
   ] },
-  hallKPI: { dai: { x: 1140, h: 900 }, nav: [NF(1140, 900, 'boss', 'Phòng ông trùm', { sfx: 'door' }), NB('hall')], spots: [
+  hallKPI: { dai: { x: 1140, h: 900 }, nav: [NL('hall', 'Quay lại hành lang')], spots: [
     { x: 22, y: 76, w: 698, h: 491, label: 'Bảng KPI', act: () => collect('k') },
     { x: 862, y: 76, w: 556, h: 760, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
   ] },
-  boss: { dai: { x: 900, h: 900 }, nav: [NL('bossLeft', 'Góc làm việc'), NR('bossRight', 'Góc sofa'), NB('hallKPI', 'Ra hành lang')], spots: [
+  boss: { dai: { x: 900, h: 900 }, nav: [NL('hallKPI', 'Ra hành lang'), NR('bossRight', 'Góc sofa')], spots: [
     { x: 33, y: 327, w: 665, h: 620, label: 'Góc làm việc', go: 'bossLeft' },
     { x: 1222, y: 262, w: 560, h: 685, label: 'Góc sofa', go: 'bossRight' },
   ] },
-  bossLeft: { nav: [NR('bossRight', 'Góc sofa'), NB('boss')], spots: [] },
-  bossRight: { nav: [NL('bossLeft', 'Góc làm việc'), NB('boss')], spots: [
+  bossLeft: { nav: [NR('boss', 'Quay lại')], spots: [] },
+  bossRight: { nav: [NL('boss', 'Quay lại')], spots: [
     { x: 720, y: 60, w: 340, h: 420, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
   ] },
-  cellDoor: { nav: [NF(840, 830, () => cellDoorAct(), 'Vào phòng giam'), NB('hall')], spots: [
+  cellDoor: { nav: [NL('hall', 'Quay lại hành lang')], spots: [
     { x: 436, y: 120, w: 797, h: 700, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: () => cellDoorAct() },
     { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: () => openKeypad() },
   ], draw: drawCellBars },
-  cells: { nav: [NB('cellDoor')], spots: [
+  cells: { nav: [NL('cellDoor', 'Quay lại')], spots: [
     { x: 985, y: 125, w: 215, h: 800, label: 'Phòng 602', act: () => cellAct(602) },
     { x: 760, y: 365, w: 85, h: 560, label: 'Phòng 609', act: () => cellAct(609) },
     { x: 630, y: 450, w: 50, h: 480, label: 'Phòng 601', act: () => cellAct(601) },
@@ -286,8 +281,9 @@ function nextLine() {
   const w = WHO[l.who];
   ui.dFrame.src = A(w.box);
   ui.dName.textContent = w.name; ui.dName.className = w.side;
-  const inScene = l.who === 'dai' && VIEWS[G.view].dai && D.area === AREA[G.view] && G.mode === 'play';
-  if (w.fig && !inScene) { ui.dFig.src = A(w.fig); ui.dFig.className = w.figSide; } else ui.dFig.className = 'hidden';
+  G.dlgWho = l.who;
+  if (w.fig) { ui.dFig.src = A(w.fig); ui.dFig.className = w.figSide; } else ui.dFig.className = 'hidden';
+  ui.dialog.className = w.fig ? 'fig-' + w.figSide : '';
   typeFull = l.text; typeIdx = 0; ui.dText.textContent = '';
   playVoice(l.v);
   clearInterval(typeTimer);
@@ -596,10 +592,10 @@ function showSound(back) {
 function showTutorial(back) {
   showScreen(`${panelBg()}<img class="bg" src="${A('ui/tut_panel.webp')}" alt="">
     <div class="tut-note"><b>MẸO NHỎ</b>
-      <p><span class="k">➜</span> Mũi tên đỏ: đi tới / quay trái phải</p>
-      <p><span class="k">↩</span> Mũi tên chữ U: quay lại</p>
+      <p><span class="k">◀ ▶</span> Mũi tên đỏ trái / phải: đổi góc nhìn</p>
+      <p><span class="k">Click</span> vào cửa, máy, đồ vật để đi vào hoặc xem</p>
       <p><span class="k">H</span> Gợi ý &nbsp; <span class="k">Esc</span> Tạm dừng</p>
-      <p class="warn">Nghe tiếng bước chân là chạy về <b>bàn máy 04</b> ngồi liền!</p></div>
+      <p class="warn">Nghe tiếng bước chân là chạy về <b>máy 04</b> ngồi liền!</p></div>
     ${ib('t-back', 'back', 959, 873, 82, 42)}`, s => { s.querySelector('#t-back').onclick = back; });
 }
 function showQuit(back) {
@@ -638,7 +634,8 @@ function endScreen() {
 }
 function gameOver() {
   G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu'); SFX.lose();
-  showScreen(`<img class="bg" src="${A('ui/menu_bg.jpg')}" alt=""><div class="over-title">BỊ LỘ RỒI!</div>
+  showScreen(`<img class="bg" src="${A('ui/menu_bg.jpg')}" alt="">
+    <img class="abs" src="${A('ui/end_title.png')}" style="left:201px;top:298px;width:701px;height:295px" alt="The End">
     ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 722, 842, 208, 200)}`, s => {
     s.querySelector('#e-restart').onclick = startGame;
     s.querySelector('#e-quit').onclick = showMenu;
@@ -651,7 +648,10 @@ function enterCompound() {
   G.flags.entered = true; ui.hud.classList.add('hidden');
   playVideo('cut2', () => {
     G.view = 'hall'; ui.hud.classList.remove('hidden');
-    dialog([L.wake, L.art, L.intro, L.endure], () => { D.t = 3; G.grace = 4; D.greeted = false; });
+    dialog([L.wake, L.art, L.intro, L.endure], () => {
+      D.t = 3; G.grace = 4; D.greeted = false;
+      toast('Bấm vào cửa, máy, đồ vật để đi vào hoặc xem · Mũi tên trái / phải để đổi góc nhìn', 5000);
+    });
   });
 }
 function startGame() {
@@ -662,8 +662,8 @@ function startGame() {
 }
 function startCut1() {
   playVideo('cut1', () => {
-    G.mode = 'play'; G.view = 'gate'; ui.hud.classList.remove('hidden'); bgm('calm');
-    dialog([L.gate1, L.gate2], () => toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000));
+    G.mode = 'play'; G.view = 'gate'; bgm('calm');
+    dialog([L.gate1, L.gate2], () => enterCompound());
   });
 }
 function objective() {
@@ -683,8 +683,8 @@ function hint() {
     const miss = LETTERS.filter(c => !has(c)).map(c => where[c]);
     t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Ghép theo ghi chú: giấy (20) + đồng hồ (4) + ly (2) + chữ (K) = 2042K. Nhập ở bàn phím cạnh cửa CELL.';
   } else if (has('note')) t = 'Quay trái về máy 04, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
-  else if (G.flags.entered) t = 'Vào văn phòng (cửa OFFICE) là tới máy 04. Quay phải 2 lần tới bàn có cuốn sổ dán mật khẩu.';
-  else t = 'Bấm vào cổng để vào khu nhà.';
+  else if (G.flags.entered) t = 'Hành lang → mũi tên phải → bấm cửa OFFICE là ngồi vào máy 04. Từ máy 04 quay phải 2 lần tới bàn có cuốn sổ dán mật khẩu.';
+  else t = 'Vào văn phòng tìm máy 04.';
   toast('💡 ' + t, 5000);
 }
 
@@ -697,16 +697,21 @@ function nav(a) {
 }
 const inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 const canInteract = () => G.mode === 'play' && !G.dlg && !G.paused && !G.video && !G.busy && !G.overlay;
-cv.addEventListener('pointermove', e => {
-  if (!canInteract()) { G.hover = G.hoverArrow = null; cv.style.cursor = 'default'; ui.tip.classList.remove('on'); return; }
-  const p = toStage(e);
+// Vật dưới chuột được tính lại mỗi khung hình theo góc nhìn hiện tại, để khi vừa đổi góc nhìn
+// không còn vẽ khung của vật ở góc nhìn cũ (lỗi khung "bay ra ngoài").
+let mouse = null;
+cv.addEventListener('pointermove', e => { mouse = toStage(e); updateHover(); });
+cv.addEventListener('pointerleave', () => { mouse = null; updateHover(); });
+function updateHover() {
+  if (!mouse || !canInteract()) { G.hover = G.hoverArrow = null; cv.style.cursor = 'default'; ui.tip.classList.remove('on'); return; }
+  const p = mouse;
   G.hoverArrow = arrowRects().find(r => inRect(p, r)) || null;
   G.hover = G.hoverArrow ? null : spotsOf(G.view).find(s => inRect(p, s)) || null;
   cv.style.cursor = (G.hover || G.hoverArrow) ? 'pointer' : 'default';
   const t = G.hover || G.hoverArrow;
   if (t) { ui.tip.textContent = G.hover ? lbl(G.hover) : (G.hoverArrow.dir === 'back' ? '↩ ' : '➜ ') + G.hoverArrow.label; ui.tip.style.left = Math.min(p.x + 24, W - 420) + 'px'; ui.tip.style.top = (p.y + 24) + 'px'; ui.tip.classList.add('on'); }
   else ui.tip.classList.remove('on');
-});
+}
 cv.addEventListener('pointerdown', e => {
   ac();
   if (G.dlg) { nextLine(); return; }
@@ -733,7 +738,7 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { G.paused ? resume() : showPause(); return; }
   if (G.paused || G.busy) return;
   const ns = VIEWS[G.view].nav, by = d => ns.filter(n => n.dir === d);
-  const k = { ArrowDown: by('back'), Backspace: by('back'), ArrowLeft: by('left'), ArrowRight: by('right'), ArrowUp: by('fwd') }[e.key];
+  const k = { ArrowLeft: by('left'), ArrowRight: by('right') }[e.key];
   if (k && k.length === 1) { e.preventDefault(); nav(k[0]); }
   if (e.key === 'h' || e.key === 'H') hint();
 });
@@ -773,7 +778,9 @@ function drawArrow(r, hover) {
 function drawHover(s) {
   // viền sáng ôm đúng hình đồ vật (ảnh tách sẵn trong assets/v2/outline)
   const p = 0.6 + 0.25 * Math.sin(G.t * 5), pad = 6;
-  const key = `${G.view}_${VIEWS[G.view].spots.indexOf(s)}`, im = IMG['ol:' + key];
+  const idx = VIEWS[G.view].spots.indexOf(s);
+  if (idx < 0) return;
+  const key = `${G.view}_${idx}`, im = IMG['ol:' + key];
   if (im && typeof OUTLINE === 'object' && OUTLINE[key]) {
     ctx.save(); ctx.globalAlpha = 0.55 + 0.45 * Math.sin(G.t * 5) ** 2;
     ctx.drawImage(im, OUTLINE[key][0], OUTLINE[key][1]); ctx.restore(); return;
@@ -794,7 +801,7 @@ function render() {
   if (img) ctx.drawImage(img, 0, 0, W, H);
   if (v.draw) v.draw();
   // Anh Đại standing in the wide views of the area he is patrolling
-  if (v.dai && D.area === AREA[G.view] && IMG.dai) {
+  if (v.dai && D.area === AREA[G.view] && IMG.dai && !(G.dlg && G.dlgWho === 'dai')) {
     const d = IMG.dai, h = v.dai.h, w = d.width * h / d.height;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 30; ctx.drawImage(d, v.dai.x - w / 2, H - h + 40, w, h); ctx.restore();
   }
@@ -819,7 +826,7 @@ function updHUD() {
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  update(dt); render(); updHUD();
+  update(dt); updateHover(); render(); updHUD();
   requestAnimationFrame(frame);
 }
 

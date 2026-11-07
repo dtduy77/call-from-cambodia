@@ -2,7 +2,7 @@
 
 Bản chơi thử: https://call-from-cambodia.vercel.app/ (Vercel tự deploy mỗi khi push lên `main`, phục vụ thư mục `game/`).
 
-Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ vật để tương tác. Mũi tên đỏ hướng lên nghĩa là đi tới chỗ đó (đặt ngay cửa hoặc bàn), mũi tên trái/phải ở mép màn hình là quay sang hướng đó, mũi tên chữ U ở giữa đáy là quay lại. Rê chuột lên mũi tên sẽ hiện tên nơi sẽ tới. Toàn bộ art, UI và cutscene lấy từ `source/Game of Thiên Duyên` (thư mục này không đưa lên git vì nặng 1.2GB).
+Game là escape room góc nhìn thứ nhất. Người chơi click vào cửa, máy, đồ vật để đi vào hoặc tương tác. Mũi tên đỏ chỉ có trái / phải ở mép màn hình để đổi góc nhìn. Rê chuột lên mũi tên hoặc đồ vật sẽ hiện tên.
 
 ## Cấu trúc
 - `index.html`, `style.css`, `game.js`: toàn bộ code, không cần build.
@@ -16,7 +16,7 @@ Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ v�
 ## Bản đồ góc nhìn
 Luồng theo prototype Figma (frame f04 → f56) và deck `source/cuoc goi tu campuchia` (slide 24–40).
 ```
-gate (cổng) → bấm cổng → cut2 (bị chích điện) → hall (Anh Đại giao việc)
+cut1 → 2 câu thoại của Tí trên nền cổng (không chơi ở cổng) → cut2 (bị chích điện) → hall (Anh Đại giao việc)
 hall ─┬─ → hallOffice (cửa OFFICE, slide 33) ─↗─ pc (ngồi máy 04 của Tí, slide 34: KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC)
       │                                           ├─ → desk (bàn dán giấy note, slide 35) ─ → desk2 (bàn có cuốn sổ St5K)
       │                                           └─ ← office (toàn cảnh, slide 36) ─┬─↗ corner (đồng hồ số 4, thùng rác số 20, slide 37)
