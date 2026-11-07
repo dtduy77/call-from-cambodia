@@ -34,7 +34,8 @@ function loadAssets(onProgress) {
   const extra = ['props/binder.png', 'props/clock.png', 'props/paper20.png', 'props/k.png', 'props/cup.png', 'chars/yen.png',
     'ui/box_ti.png', 'ui/box_dai.png', 'ui/box_yen.png', 'ui/menu_bg.jpg', 'ui/logo.png', 'ui/start.png', 'ui/start_h.png', 'ui/option.png', 'ui/option_h.png',
     'ui/opt_bg.jpg', 'ui/opt_panel.webp', 'ui/snd_panel.webp', 'ui/tut_panel.webp', 'ui/quit_panel.webp', 'ui/pause_panel.webp', 'ui/end_bg.jpg', 'ui/end_title.png', 'ui/mission.jpg'];
-  const all = [...Object.entries(IMG_SRC), ...extra.map(p => [p, A(p)])];
+  const outl = Object.keys(typeof OUTLINE === 'object' ? OUTLINE : {}).map(k => ['ol:' + k, A(`outline/${k}.png`)]);
+  const all = [...Object.entries(IMG_SRC), ...extra.map(p => [p, A(p)]), ...outl];
   let done = 0;
   return Promise.all(all.map(([k, src]) => new Promise(res => {
     const i = new Image();
@@ -762,8 +763,13 @@ function drawArrow(r, hover) {
   ctx.restore();
 }
 function drawHover(s) {
-  // viền mảnh, sáng nhẹ, bo theo vật
+  // viền sáng ôm đúng hình đồ vật (ảnh tách sẵn trong assets/v2/outline)
   const p = 0.6 + 0.25 * Math.sin(G.t * 5), pad = 6;
+  const key = `${G.view}_${VIEWS[G.view].spots.indexOf(s)}`, im = IMG['ol:' + key];
+  if (im && typeof OUTLINE === 'object' && OUTLINE[key]) {
+    ctx.save(); ctx.globalAlpha = 0.55 + 0.45 * Math.sin(G.t * 5) ** 2;
+    ctx.drawImage(im, OUTLINE[key][0], OUTLINE[key][1]); ctx.restore(); return;
+  }
   ctx.save(); ctx.beginPath();
   if (s.shape === 'ellipse') ctx.ellipse(s.x + s.w / 2, s.y + s.h / 2, s.w / 2 + pad, s.h / 2 + pad, 0, 0, Math.PI * 2);
   else ctx.roundRect(s.x - pad, s.y - pad, s.w + pad * 2, s.h + pad * 2, Math.min(28, s.w / 4, s.h / 4));
