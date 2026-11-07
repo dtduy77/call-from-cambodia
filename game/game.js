@@ -91,6 +91,8 @@ const SFX = {
   door() { noise(0.45, 0.3, 300); tone(90, 0.4, 'sine', 0.2); },
   heart() { tone(62, 0.12, 'sine', 0.55); tone(55, 0.14, 'sine', 0.45, 0.17); },
   key() { tone(1200 + Math.random() * 300, 0.04, 'square', 0.05); },
+  ring() { for (let i = 0; i < 2; i++) for (let k = 0; k < 10; k++) { tone(1320, 0.05, 'sine', 0.12, i * 0.9 + k * 0.06); tone(1760, 0.05, 'sine', 0.08, i * 0.9 + k * 0.06 + 0.03); } },
+  lose() { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.35, 'sawtooth', 0.12, i * 0.22)); },
 };
 const BGM = { mode: null, beat: 0, timer: null };
 const BASS = [110, 110, 87.31, 87.31, 130.81, 130.81, 98, 82.41];
@@ -308,6 +310,7 @@ const L = {
   gate2: { who: 'ti', v: 'gate2_ti', text: 'Mình giả bộ đi xin việc để lọt vô trong. Diễn cho khéo nghen Tí, đừng để lộ cái mặt công an.' },
   notyet: { who: 'ti', v: 'notyet_ti', text: 'Chưa cứu được An Yên mà về là bị sếp la cho thúi đầu. Vô thôi!' },
   wake: { who: 'dai', v: 'wake_dai', text: 'Tỉnh rồi hả? Từ nay mày làm cho tao. Ở đây tao nói gì nghe nấy, nghe chưa?' },
+  art: { who: 'dai', v: 'art_dai', text: 'Nhớ nè: tất cả việc tụi mình đang làm hông phải lừa đảo. Đó là nghệ thuật thuyết phục!' },
   intro: { who: 'dai', v: 'intro_dai', text: 'Ra văn phòng ngồi máy 04 mà làm. Thấy lười là tao chích điện cho dựng tóc luôn á!' },
   endure: { who: 'ti', v: 'endure_ti', text: '(Nhịn... nhịn... Ra văn phòng mở máy 04 coi có manh mối gì hông.)' },
   watch: { who: 'ti', v: 'watch_ti', text: 'Ổng đang ngó mình kìa. Ra máy 04 làm bộ chăm chỉ cái đã.' },
@@ -333,7 +336,10 @@ const L = {
   yen1: { who: 'yen', v: 'yen1_yen', text: 'Anh... anh tới cứu em thiệt hả?' },
   ti1: { who: 'ti', v: 'ti1_ti', text: 'Anh là Tí, công an. Gia đình em báo tin rồi. Mình đi liền!' },
   yen2: { who: 'yen', v: 'yen2_yen', text: 'Em tưởng không bao giờ được về nhà nữa...' },
+  yen3: { who: 'yen', v: 'yen3_yen', text: 'Anh cứu em xong nhớ cho em xin số nghen, em về em viết review năm sao!' },
   ti2: { who: 'ti', v: 'ti2_ti', text: 'Theo sát anh nghen. Ra khỏi cổng là an toàn rồi!' },
+  alo: { who: 'ti', v: 'alo_ti', text: 'Ủa alo, gì căng vậy?' },
+  gone: { who: 'ti', v: 'gone_ti', text: 'Hắn ta đi rồi... phải hành động lẹ thôi.' },
   caught: { who: 'dai', v: 'caught_dai', text: 'Ê, lảng vảng đây làm gì đó mậy? Ăn điện nè!' },
   afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Về chỗ ngồi chạy KPI cho tao, lẹ!' },
   gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nghen. Thôi ở lại đây làm cho tao luôn đi!' },
@@ -406,7 +412,7 @@ function openFolder(f) {
       }
     };
     wb.querySelector('#pwok').onclick = submit;
-    inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') submit(); if (e.key === 'Escape') closeOverlay(); });
+    inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key.length === 1 || e.key === 'Backspace') SFX.key(); if (e.key === 'Enter') submit(); if (e.key === 'Escape') closeOverlay(); });
   } else if (f === 'kichban') {
     win('KỊCH BẢN GỌI ĐIỆN', `Bước 1: Xưng là nhân viên ngân hàng / công an / bưu điện.<br>Bước 2: Báo "tài khoản có dấu hiệu bất thường" hoặc "trúng thưởng".<br>Bước 3: Hối thúc, đe dọa, không cho nạn nhân thời gian suy nghĩ.<br>Bước 4: Yêu cầu chuyển tiền vào "tài khoản an toàn".<br><br><span class="hl">(Tí: Nhớ kỹ. Ra ngoài phải cảnh báo mọi người.)</span>`);
   } else if (f === 'danhsach') {
@@ -460,7 +466,7 @@ function cellAct(n) {
   if (n !== 603) return dialog([L.wrongcell]);
   if (!has('key')) return dialog([L.nokey]);
   SFX.door(); G.flags.rescued = true; G.alarm = false;
-  dialog([L.yen1, L.ti1, L.yen2, L.ti2], () => playVideo('cut3', missionComplete));
+  dialog([L.yen1, L.ti1, L.yen2, L.ti2, L.yen3], () => playVideo('cut3', missionComplete));
 }
 
 /* ---------------- Cutscenes ---------------- */
@@ -487,7 +493,9 @@ function updDai(dt) {
     ui.warn.textContent = `Có tiếng bước chân đang tới ${AREA_NAME[here]}...`;
   }
   if (D.t <= 0) {
+    const left = D.area === here;
     D.idx = (D.idx + 1) % ROUTE.length; D.area = ROUTE[D.idx]; D.t = STAY[D.area]; D.warned = false; D.greeted = false;
+    if (left && D.area !== here && !G.flags.saidGone && !G.overlay) { G.flags.saidGone = true; dialog([L.gone]); }
     if (D.area === here) { G.grace = Math.max(G.grace, 1.2); SFX.heart(); }
   }
 }
@@ -508,7 +516,7 @@ function updDetect(dt) {
 function caught(reason) {
   G.det = 0; closeOverlay(true); ui.warn.classList.remove('on');
   ui.flash.classList.remove('zap'); void ui.flash.offsetWidth; ui.flash.classList.add('zap');
-  dialog([L.caught], () => playVideo('cut2', () => {
+  dialog([L.caught, L.alo], () => playVideo('cut2', () => {
     G.lives--; G.caught++;
     if (G.lives <= 0) return dialog([L.gameover], gameOver);
     if (has('key') && !G.flags.rescued) { G.inv.delete('key'); G.alarm = false; bgm('calm'); renderInv(); toast('Ông trùm đã lấy lại chùm chìa khóa.'); }
@@ -636,7 +644,7 @@ function endScreen() {
   });
 }
 function gameOver() {
-  G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu');
+  G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu'); SFX.lose();
   showScreen(`<img class="bg" src="${A('ui/menu_bg.jpg')}" alt=""><div class="over-title">BỊ LỘ RỒI!</div>
     ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 722, 842, 208, 200)}`, s => {
     s.querySelector('#e-restart').onclick = startGame;
@@ -650,11 +658,16 @@ function enterCompound() {
   G.flags.entered = true; ui.hud.classList.add('hidden');
   playVideo('cut2', () => {
     G.view = 'hall'; ui.hud.classList.remove('hidden');
-    dialog([L.wake, L.intro, L.endure], () => { D.t = 3; G.grace = 4; D.greeted = false; });
+    dialog([L.wake, L.art, L.intro, L.endure], () => { D.t = 3; G.grace = 4; D.greeted = false; });
   });
 }
 function startGame() {
-  hideScreen(); newGame(); renderInv(); bgm(null);
+  hideScreen(); newGame(); renderInv(); bgm(null); G.mode = 'intro';
+  SFX.ring(); // chuông điện thoại reo: Tí nhận cuộc gọi giao nhiệm vụ
+  ui.fade.classList.add('on');
+  setTimeout(() => { ui.fade.classList.remove('on'); startCut1(); }, 1900);
+}
+function startCut1() {
   playVideo('cut1', () => {
     G.mode = 'play'; G.view = 'gate'; ui.hud.classList.remove('hidden'); bgm('calm');
     dialog([L.gate1, L.gate2], () => toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000));
