@@ -152,3 +152,5 @@ button{font-family:inherit;cursor:pointer}
 #loading{position:absolute;inset:0;z-index:20;background:#0d0f10;color:#e2cbb2;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"VT323",monospace;font-size:56px;gap:20px}
 #load-bar{width:600px;height:26px;border:4px solid #e2cbb2}
 #load-fill{height:100%;width:0;background:#e7b85a}
+/* Anh Đại nói chữ in hoa như deck (slide 46) */
+#dialog.fig-left #d-text{text-transform:uppercase;font-size:33px;letter-spacing:.01em}

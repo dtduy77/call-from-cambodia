@@ -495,7 +495,7 @@ function updDetect(dt) {
   if (present && G.grace <= 0) {
     let r = SAFE.has(G.view) ? -40 : here === 'boss' ? 55 : 24;
     if (r > 0 && G.overlay && G.overlay !== 'pc') r += 15;
-    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('Anh Đại: "' + L.good.text + '"'); }
+    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('ANH ĐẠI: "' + L.good.text.toUpperCase() + '"'); }
     G.det = clamp(G.det + r * dt, 0, 100);
   } else G.det = Math.max(0, G.det - 15 * dt);
   G.hbT -= dt;
