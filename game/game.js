@@ -158,7 +158,7 @@ const NL = (to, label, o = {}) => ({ dir: 'left', x: 86, y: 540, to, label, ...o
 const NR = (to, label, o = {}) => ({ dir: 'right', x: 1834, y: 540, to, label, ...o });
 const NB = (to, label = 'Quay lại') => ({ dir: 'back', x: 960, y: 1000, to, label });
 const VIEWS = {
-  gate: { nav: [], spots: [] }, // chỉ làm nền cho 2 câu thoại mở đầu, không chơi ở cổng
+  gate: { nav: [NF(964, 762, () => enterCompound(), 'Vào khu nhà')], spots: [] }, // như prototype f04: chỉ mũi tên lên để đi vào, không viền cổng
   hall: { dai: { x: 930, h: 720 }, nav: [
     NL('hallWater', 'Máy lọc nước', { lock: true }),
     NR('hallOffice', 'Văn phòng (máy 04)'),
@@ -650,7 +650,6 @@ function enterCompound() {
     G.view = 'hall'; ui.hud.classList.remove('hidden');
     dialog([L.wake, L.art, L.intro, L.endure], () => {
       D.t = 3; G.grace = 4; D.greeted = false;
-      toast('Bấm vào cửa, máy, đồ vật để đi vào hoặc xem · Mũi tên trái / phải để đổi góc nhìn', 5000);
     });
   });
 }
@@ -662,8 +661,8 @@ function startGame() {
 }
 function startCut1() {
   playVideo('cut1', () => {
-    G.mode = 'play'; G.view = 'gate'; bgm('calm');
-    dialog([L.gate1, L.gate2], () => enterCompound());
+    G.mode = 'play'; G.view = 'gate'; ui.hud.classList.remove('hidden'); bgm('calm');
+    dialog([L.gate1, L.gate2], () => toast('Bấm mũi tên đỏ để đi vào · Bấm cửa, máy, đồ vật để xem · Mũi tên trái / phải để đổi góc nhìn', 5000));
   });
 }
 function objective() {
@@ -684,7 +683,7 @@ function hint() {
     t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Ghép theo ghi chú: giấy (20) + đồng hồ (4) + ly (2) + chữ (K) = 2042K. Nhập ở bàn phím cạnh cửa CELL.';
   } else if (has('note')) t = 'Quay trái về máy 04, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
   else if (G.flags.entered) t = 'Hành lang → mũi tên phải → bấm cửa OFFICE là ngồi vào máy 04. Từ máy 04 quay phải 2 lần tới bàn có cuốn sổ dán mật khẩu.';
-  else t = 'Vào văn phòng tìm máy 04.';
+  else t = 'Bấm mũi tên đỏ ở cổng để vào khu nhà.';
   toast('💡 ' + t, 5000);
 }
 
@@ -738,7 +737,7 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { G.paused ? resume() : showPause(); return; }
   if (G.paused || G.busy) return;
   const ns = VIEWS[G.view].nav, by = d => ns.filter(n => n.dir === d);
-  const k = { ArrowLeft: by('left'), ArrowRight: by('right') }[e.key];
+  const k = { ArrowLeft: by('left'), ArrowRight: by('right'), ArrowUp: by('fwd') }[e.key];
   if (k && k.length === 1) { e.preventDefault(); nav(k[0]); }
   if (e.key === 'h' || e.key === 'H') hint();
 });
