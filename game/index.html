@@ -6,51 +6,46 @@
 <title>Cuộc Gọi Từ Campuchia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Patrick+Hand&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="stage">
-  <canvas id="cv" width="1280" height="720"></canvas>
-
+  <canvas id="cv"></canvas>
   <div id="vignette"></div>
 
   <div id="hud" class="hidden">
-    <div id="hud-obj" class="box">
-      <div class="lbl">NHIỆM VỤ</div>
-      <div id="obj-text"></div>
-      <div id="room-text"></div>
-      <div id="dai-text"></div>
+    <div id="obj"><div class="lbl">NHIỆM VỤ</div><div id="obj-text"></div><div id="countdown"></div></div>
+    <div id="inv"></div>
+    <div id="hud-right">
+      <div id="det"><div class="lbl">MỨC NGHI NGỜ</div><div id="det-bar"><div id="det-fill"></div></div><div id="lives"></div></div>
+      <button id="btn-pause" title="Tạm dừng (Esc)"><span></span><span></span></button>
     </div>
-    <div id="hud-timer" class="box mono">00:00</div>
-    <div id="hud-right" class="box">
-      <div class="lbl">MỨC NGHI NGỜ</div>
-      <div id="det-bar"><div id="det-fill"></div></div>
-      <div id="lives"></div>
-    </div>
-    <div id="hud-inv"></div>
-    <div id="hud-btns">
-      <button id="btn-hint" title="Gợi ý (H)">💡 Gợi ý</button>
-      <button id="btn-pause" title="Tạm dừng (Esc)">⏸</button>
-    </div>
+    <button id="btn-hint" title="Gợi ý (H)">?</button>
+    <div id="warn"></div>
   </div>
 
-  <div id="toast"></div>
-
-  <div id="overlay" class="hidden"><div id="panel"></div></div>
+  <div id="tip"></div>
+  <div id="overlay" class="hidden"></div>
 
   <div id="dialog" class="hidden">
-    <div id="d-portrait"></div>
+    <img id="d-fig" alt="">
     <div id="d-box">
+      <img id="d-frame" alt="">
       <div id="d-name"></div>
       <div id="d-text"></div>
-      <div id="d-next">▼ E / Space / Click</div>
+      <div id="d-next">Space ▸</div>
     </div>
   </div>
 
+  <video id="video" playsinline preload="auto" class="hidden"></video>
+  <div id="vskip" class="hidden">Space / Click: bỏ qua</div>
+
   <div id="screen" class="hidden"></div>
+  <div id="toast"></div>
   <div id="fade"></div>
   <div id="flash"></div>
+  <div id="loading"><div>ĐANG TẢI</div><div id="load-bar"><div id="load-fill"></div></div></div>
 </div>
 <script src="game.js"></script>
 </body>

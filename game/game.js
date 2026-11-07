@@ -1,1166 +1,700 @@
 'use strict';
 /* =========================================================
-   CUỘC GỌI TỪ CAMPUCHIA — Map 1
-   ANO301 · Nhóm 3 · art: asset của nhóm (game/assets)
+   CUỘC GỌI TỪ CAMPUCHIA · Map 1 (point-and-click, first person)
+   ANO301 · Nhóm 3 · art & UI: source/Game of Thiên Duyên
    ========================================================= */
-const W = 1280, H = 720;
+const W = 1920, H = 1080;
 const $ = s => document.querySelector(s);
 const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const rnd = (a, b) => a + Math.random() * (b - a);
-const pick = a => a[Math.floor(Math.random() * a.length)];
+const A = p => 'assets/v2/' + p;
 
-let SCALE = 1, RS = 1; // RS: canvas backing-store scale so art stays sharp on large/Retina screens
-cv.style.width = W + 'px'; cv.style.height = H + 'px';
+/* ---------------- Stage scaling (sharp on Retina) ---------------- */
+let SCALE = 1, RS = 1;
 function resize() {
   SCALE = Math.min(innerWidth / W, innerHeight / H);
   stage.style.transform = `scale(${SCALE})`;
   stage.style.left = (innerWidth - W * SCALE) / 2 + 'px';
   stage.style.top = (innerHeight - H * SCALE) / 2 + 'px';
-  const rs = clamp(SCALE * (window.devicePixelRatio || 1), 1, 2.5);
-  if (Math.abs(rs - RS) > 0.01 || cv.width !== Math.round(W * rs)) {
-    RS = rs; cv.width = Math.round(W * RS); cv.height = Math.round(H * RS);
-  }
-  ctx.setTransform(RS, 0, 0, RS, 0, 0);
-  ctx.imageSmoothingQuality = 'high';
+  const rs = clamp(SCALE * (window.devicePixelRatio || 1), 0.5, 2);
+  if (cv.width !== Math.round(W * rs)) { RS = rs; cv.width = Math.round(W * RS); cv.height = Math.round(H * RS); }
 }
 addEventListener('resize', resize); resize();
+const toStage = e => { const r = stage.getBoundingClientRect(); return { x: (e.clientX - r.left) / SCALE, y: (e.clientY - r.top) / SCALE }; };
 
 /* ---------------- Assets ---------------- */
-const SRC = {
-  bg_office: 'bg_office.jpg', bg_hall: 'bg_hall.jpg', bg_hallB: 'bg_hallB.jpg', bg_boss: 'bg_boss.jpg', bg_menu: 'bg_menu.jpg',
-  ti_front: 'ti_front.png', ti_side: 'ti_turn2.png', ti_back: 'ti_turn4.png',
-  ti_phone: 'ti_pose0.png', ti_pose1: 'ti_pose1.png', ti_pose2: 'ti_pose2.png',
-  anyen: 'anyen.png', anhdai: 'anhdai.png',
-  p_clock: 'props/clock.png', p_cup: 'props/cup_2.png', p_trash: 'props/trash.png', p_keys: 'props/keys.png',
-};
+const ROOMS = ['office', 'desk', 'desk2', 'pc', 'corner', 'hallOffice', 'hall', 'hallWater', 'hallKPI', 'boss', 'bossLeft', 'bossRight', 'cellDoor', 'cells'];
 const IMG = {};
-function loadAssets() {
-  return Promise.all(Object.entries(SRC).map(([k, f]) => new Promise(res => {
+const IMG_SRC = {
+  ...Object.fromEntries(ROOMS.map(r => [r, A(`rooms/${r}.jpg`)])),
+  dai: A('chars/dai.png'), keys: A('props/keys.png'),
+};
+function loadAssets(onProgress) {
+  const extra = ['props/binder.png', 'props/clock.png', 'props/paper20.png', 'props/k.png', 'props/cup.png', 'chars/yen.png',
+    'ui/box_ti.png', 'ui/box_dai.png', 'ui/box_yen.png', 'ui/menu_bg.jpg', 'ui/logo.png', 'ui/start.png', 'ui/start_h.png', 'ui/option.png', 'ui/option_h.png',
+    'ui/opt_bg.jpg', 'ui/opt_panel.webp', 'ui/snd_panel.webp', 'ui/tut_panel.webp', 'ui/quit_panel.webp', 'ui/pause_panel.webp', 'ui/end_bg.jpg', 'ui/end_title.png'];
+  const all = [...Object.entries(IMG_SRC), ...extra.map(p => [p, A(p)])];
+  let done = 0;
+  return Promise.all(all.map(([k, src]) => new Promise(res => {
     const i = new Image();
-    i.onload = () => { IMG[k] = i; res(); };
-    i.onerror = () => { console.warn('Thiếu asset', f); res(); };
-    i.src = 'assets/' + f;
+    i.onload = () => { IMG[k] = i; res(); onProgress(++done / all.length); };
+    i.onerror = () => { console.warn('Thiếu asset', src); res(); onProgress(++done / all.length); };
+    i.src = src;
   })));
 }
-function tint(img, color) {
-  const c = document.createElement('canvas');
-  c.width = img.width; c.height = img.height;
-  const x = c.getContext('2d');
-  x.drawImage(img, 0, 0);
-  x.globalCompositeOperation = 'multiply'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
-  x.globalCompositeOperation = 'destination-in'; x.drawImage(img, 0, 0);
-  return c;
-}
-function draw(k, x, y, w, h) { const i = IMG[k]; if (i) ctx.drawImage(i, x, y, w, h); }
 
-/* ---------------- Audio (WebAudio synth) ---------------- */
-const AU = { ctx: null, on: true, master: null };
+/* ---------------- Settings & audio ---------------- */
+const SET = { music: 0.6, sfx: 0.9 };
+try { Object.assign(SET, JSON.parse(localStorage.getItem('cgtc-settings') || '{}')); } catch (e) { /* private mode */ }
+const saveSet = () => { try { localStorage.setItem('cgtc-settings', JSON.stringify(SET)); } catch (e) { /* ignore */ } applyVolumes(); };
+
+const AU = { ctx: null, sfx: null, music: null };
 function ac() {
   if (!AU.ctx) {
     AU.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    AU.master = AU.ctx.createGain(); AU.master.gain.value = 0.5; AU.master.connect(AU.ctx.destination);
+    AU.sfx = AU.ctx.createGain(); AU.sfx.connect(AU.ctx.destination);
+    AU.music = AU.ctx.createGain(); AU.music.connect(AU.ctx.destination);
+    applyVolumes();
   }
   if (AU.ctx.state === 'suspended') AU.ctx.resume();
   return AU.ctx;
 }
-function tone(f, d, type = 'square', v = 0.15, when = 0, slide = 0) {
-  if (!AU.on) return;
+function applyVolumes() {
+  if (AU.sfx) { AU.sfx.gain.value = SET.sfx * 0.6; AU.music.gain.value = SET.music * 0.5; }
+  if (voice) voice.volume = SET.sfx;
+  $('#video').volume = Math.max(SET.sfx, SET.music);
+}
+function tone(f, d, type = 'square', v = 0.15, when = 0, bus = 'sfx') {
   const c = ac(), t = c.currentTime + when;
   const o = c.createOscillator(), g = c.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t);
-  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
   g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
-  o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + d + 0.02);
+  o.connect(g); g.connect(AU[bus]); o.start(t); o.stop(t + d + 0.02);
 }
-function noise(d, v = 0.2, when = 0, freq = 800) {
-  if (!AU.on) return;
-  const c = ac(), t = c.currentTime + when;
+function noise(d, v = 0.2, freq = 800) {
+  const c = ac(), t = c.currentTime;
   const b = c.createBuffer(1, Math.max(1, c.sampleRate * d), c.sampleRate);
   const ch = b.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
   const s = c.createBufferSource(); s.buffer = b;
   const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq;
   const g = c.createGain(); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
-  s.connect(f); f.connect(g); g.connect(AU.master); s.start(t);
+  s.connect(f); f.connect(g); g.connect(AU.sfx); s.start(t);
 }
 const SFX = {
   click() { tone(900, 0.05, 'square', 0.06); },
-  type() { tone(1300 + Math.random() * 500, 0.025, 'square', 0.03); },
+  step() { noise(0.12, 0.12, 500); },
   ok() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'triangle', 0.14, i * 0.08)); },
   wrong() { tone(180, 0.25, 'sawtooth', 0.14); tone(140, 0.3, 'sawtooth', 0.12, 0.12); },
   pick() { tone(700, 0.08, 'triangle', 0.15); tone(1100, 0.14, 'triangle', 0.15, 0.07); },
-  door() { noise(0.45, 0.3, 0, 300); tone(90, 0.4, 'sine', 0.2); },
-  zap() { noise(0.7, 0.4, 0, 2500); for (let i = 0; i < 8; i++) tone(200 + Math.random() * 900, 0.06, 'sawtooth', 0.12, i * 0.07); },
+  door() { noise(0.45, 0.3, 300); tone(90, 0.4, 'sine', 0.2); },
   heart() { tone(62, 0.12, 'sine', 0.55); tone(55, 0.14, 'sine', 0.45, 0.17); },
-  ring() { for (let i = 0; i < 2; i++) for (let j = 0; j < 10; j++) tone(j % 2 ? 440 : 480, 0.05, 'sine', 0.12, i * 0.75 + j * 0.05); },
-  alarm() { tone(880, 0.22, 'square', 0.07); tone(660, 0.22, 'square', 0.07, 0.25); },
-  step() { noise(0.04, 0.05, 0, 1500); },
+  key() { tone(1200 + Math.random() * 300, 0.04, 'square', 0.05); },
 };
 const BGM = { mode: null, beat: 0, timer: null };
 const BASS = [110, 110, 87.31, 87.31, 130.81, 130.81, 98, 82.41];
-function bgm(mode) {
-  BGM.mode = mode;
-  if (!BGM.timer) BGM.timer = setInterval(bgmTick, 250);
-}
+function bgm(mode) { BGM.mode = mode; if (!BGM.timer) BGM.timer = setInterval(bgmTick, 250); }
 function bgmTick() {
-  if (!AU.on || !BGM.mode || !AU.ctx) return;
+  if (!BGM.mode || !AU.ctx || G.video) return;
   const b = BGM.beat++, n = BASS[(b >> 3) % 8];
   if (BGM.mode === 'menu') {
-    if (b % 4 === 0) tone(n, 1.0, 'triangle', 0.08);
-    if (b % 2 === 0) tone([440, 523, 659, 523][(b >> 1) % 4] * 0.5, 0.45, 'sine', 0.035);
+    if (b % 4 === 0) tone(n, 1.0, 'triangle', 0.12, 0, 'music');
+    if (b % 2 === 0) tone([440, 523, 659, 523][(b >> 1) % 4] * 0.5, 0.45, 'sine', 0.05, 0, 'music');
   } else if (BGM.mode === 'calm') {
-    if (b % 4 === 0) tone(n, 0.9, 'triangle', 0.1);
-    if (b % 8 === 6) tone(n * 4, 0.3, 'sine', 0.035);
-    if (b % 16 === 11) tone(n * 6, 0.2, 'sine', 0.025);
+    if (b % 4 === 0) tone(n, 0.9, 'triangle', 0.13, 0, 'music');
+    if (b % 8 === 6) tone(n * 4, 0.3, 'sine', 0.05, 0, 'music');
   } else if (BGM.mode === 'alarm') {
-    if (b % 2 === 0) tone(n, 0.22, 'sawtooth', 0.07);
-    if (b % 4 === 2) tone(1200, 0.06, 'square', 0.03);
-    if (b % 8 === 0) SFX.alarm();
+    if (b % 2 === 0) tone(n, 0.22, 'sawtooth', 0.09, 0, 'music');
+    if (b % 8 === 0) { tone(880, 0.22, 'square', 0.07, 0, 'music'); tone(660, 0.22, 'square', 0.07, 0.25, 'music'); }
   }
 }
 
-/* ---------------- DOM helpers ---------------- */
+/* ---------------- Voice lines (generated, pitch-shifted per character) ---------------- */
+let voice = null;
+function playVoice(id) {
+  stopVoice();
+  if (!id) return;
+  voice = new Audio(A(`voice/${id}.mp3`)); voice.volume = SET.sfx;
+  voice.play().catch(() => { /* autoplay blocked until first click */ });
+}
+function stopVoice() { if (voice) { voice.pause(); voice = null; } }
+
+/* ---------------- UI helpers ---------------- */
 const ui = {
-  hud: $('#hud'), obj: $('#obj-text'), roomT: $('#room-text'), daiT: $('#dai-text'), timer: $('#hud-timer'),
-  detFill: $('#det-fill'), lives: $('#lives'), inv: $('#hud-inv'), toast: $('#toast'), vign: $('#vignette'),
-  overlay: $('#overlay'), panel: $('#panel'), dialog: $('#dialog'), dPort: $('#d-portrait'), dName: $('#d-name'),
-  dText: $('#d-text'), screen: $('#screen'), fade: $('#fade'), flash: $('#flash'),
+  hud: $('#hud'), obj: $('#obj-text'), count: $('#countdown'), inv: $('#inv'), detFill: $('#det-fill'), lives: $('#lives'), warn: $('#warn'),
+  vign: $('#vignette'), tip: $('#tip'), overlay: $('#overlay'), dialog: $('#dialog'), dFig: $('#d-fig'), dFrame: $('#d-frame'),
+  dName: $('#d-name'), dText: $('#d-text'), video: $('#video'), vskip: $('#vskip'), screen: $('#screen'), toast: $('#toast'), fade: $('#fade'), flash: $('#flash'),
 };
 let toastT = 0;
-function toast(msg) {
-  ui.toast.textContent = msg; ui.toast.classList.add('show');
-  clearTimeout(toastT); toastT = setTimeout(() => ui.toast.classList.remove('show'), 2200);
-}
-const fmt = s => { s = Math.max(0, Math.floor(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+function toast(msg, ms = 2600) { ui.toast.textContent = msg; ui.toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => ui.toast.classList.remove('show'), ms); }
+const fmt = s => { s = Math.max(0, Math.ceil(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 
 /* ---------------- Game state ---------------- */
-const G = {}, P = {}, D = {};
-const ROUTE = ['boss', 'hallB', 'hallA', 'office', 'hallA', 'hallB'];
-const DWELL = { boss: 11, hallB: 3.5, hallA: 4, office: 6 };
-const DOORX = {
-  office: { hallA: -60 },
-  hallA: { office: 1340, hallB: -60 },
-  hallB: { hallA: 1340, boss: 880 },
-  boss: { hallB: 1340 },
-};
-const ADJ = { office: ['hallA'], hallA: ['office', 'hallB', 'cells'], hallB: ['hallA', 'boss'], boss: ['hallB'], cells: ['hallA'] };
-const LETTERS = ['c2', 'c4', 'cK', 'c20'];
+const G = { mode: 'loading' };
+const D = {};
+const AREA = { office: 'office', desk: 'office', desk2: 'office', pc: 'office', corner: 'office', hallOffice: 'hall', hall: 'hall', hallWater: 'hall', hallKPI: 'hall', cellDoor: 'hall', boss: 'boss', bossLeft: 'boss', bossRight: 'boss', cells: 'cells' };
+const SAFE = new Set(['desk', 'pc']);
+const ROUTE = ['boss', 'hall', 'office', 'hall'];
+const STAY = { boss: 14, hall: 7, office: 9 };
+const AREA_NAME = { office: 'phòng làm việc', hall: 'hành lang', boss: 'phòng ông trùm', cells: 'phòng giam' };
+const LETTERS = ['cup', 'clock', 'k', 'paper'];
 
 function newGame() {
   Object.assign(G, {
-    mode: 'play', room: 'office', elapsed: 0, lives: 3, det: 0, caughtN: 0, grace: 0,
-    inv: new Set(), flags: {}, overlay: null, alarm: false, countdown: 0,
-    dlg: false, dq: [], ddone: null, paused: false, trans: false, cut: null, hbT: 0, t: 0, wrongPw: 0,
+    mode: 'play', view: 'office', inv: new Set(), flags: {}, lives: 3, det: 0, caught: 0, grace: 0,
+    alarm: false, countdown: 0, overlay: null, dlg: null, paused: false, video: false, busy: false, t: 0, hbT: 0, hover: null, hoverArrow: null,
   });
-  Object.assign(P, { x: 1000, dir: -1, moving: false, target: null, after: null, walkT: 0, stepT: 0 });
-  Object.assign(D, { room: 'office', x: 760, dir: 1, state: 'hold', ri: 3, timer: 0, goal: 0, look: 2, say: null, sayT: 0, walkT: 0, chasing: false });
+  Object.assign(D, { area: 'office', idx: 2, t: 6, warned: false, greeted: false });
 }
 const has = id => G.inv.has(id);
 
-/* ---------------- Rooms & hotspots ---------------- */
-const say = (text, face = 'angry') => () => dialog([{ who: 'ti', face, text }]);
-let KEY_GREEN = null;
-
-const ROOMS = {
-  office: {
-    name: 'Phòng làm việc', bg: 'bg_office', floor: 702, h: 392,
-    exits: { left: { to: 'hallA', x: 1150, dir: -1, label: 'Hành lang A' } },
-    spots: [
-      { id: 'pc04', x: 935, y: 226, w: 132, h: 96, ix: 1000, label: 'Máy tính PC04 (chỗ của mình)', act: openComputer },
-      { id: 'note', x: 800, y: 318, w: 70, h: 32, ix: 840, label: () => has('note') ? 'Mặt bàn' : 'Tờ giấy trên bàn',
-        act: () => has('note') ? say('Mặt bàn trống trơn, chỉ có bụi với vết cà phê.')() : openNote(),
-        draw() { if (has('note')) return; ctx.save(); ctx.translate(835, 333); ctx.rotate(-0.12);
-          ctx.fillStyle = '#fbf4e2'; ctx.strokeStyle = '#111'; ctx.lineWidth = 2; ctx.fillRect(-26, -12, 52, 22); ctx.strokeRect(-26, -12, 52, 22);
-          ctx.strokeStyle = '#777'; ctx.lineWidth = 1; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-20, -6 + i * 6); ctx.lineTo(18, -6 + i * 6); ctx.stroke(); }
-          ctx.restore(); } },
-      { id: 'clock', x: 612, y: 122, w: 80, h: 80, ix: 650, label: 'Đồng hồ treo tường', act: inspectClock,
-        draw() { draw('p_clock', 614, 124, 76, 74); } },
-      { id: 'calendar', x: 84, y: 150, w: 80, h: 100, ix: 125, label: 'Lịch treo tường',
-        act: say('Lịch năm 2024... Tờ giấy bàn giao ghi "30 tháng 2". Tháng 2 làm gì có ngày 30. Giấy tờ ở đây toàn đồ dỏm.'),
-        draw() { ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.fillRect(88, 156, 70, 88); ctx.strokeRect(88, 156, 70, 88);
-          ctx.fillStyle = '#c8342b'; ctx.fillRect(88, 156, 70, 22); ctx.strokeRect(88, 156, 70, 22);
-          ctx.fillStyle = '#fff'; ctx.font = '800 15px "Be Vietnam Pro"'; ctx.textAlign = 'center'; ctx.fillText('2024', 123, 173);
-          ctx.fillStyle = '#111'; ctx.font = '800 34px "Be Vietnam Pro"'; ctx.fillText('T2', 123, 225); ctx.textAlign = 'left'; } },
-      { id: 'pc02', x: 293, y: 220, w: 126, h: 84, ix: 356, label: 'Máy PC02',
-        act: say('Máy PC02. Màn hình đầy tin nhắn "Chúc mừng bạn trúng thưởng...". Kịch bản lừa đảo cả đấy.') },
-      { id: 'pc03', x: 680, y: 230, w: 124, h: 84, ix: 742, label: 'Máy PC03',
-        act: say('Máy của người khác. Đụng vào là bị nghi ngay. Mình được giao máy số 4.') },
-    ],
-  },
-  hallA: {
-    name: 'Hành lang A', bg: 'bg_hall', floor: 706, h: 400,
-    exits: {
-      right: { to: 'office', x: 110, dir: 1, label: 'Phòng làm việc' },
-      left: { to: 'hallB', x: 1150, dir: -1, label: 'Hành lang B' },
-    },
-    spots: [
-      { id: 'cup', x: 284, y: 262, w: 44, h: 44, ix: 300, label: 'Cốc giấy ở máy lọc nước', act: inspectCup,
-        draw() { draw('p_cup', 290, 268, 32, 32); } },
-      { id: 'kpi', x: 738, y: 160, w: 96, h: 134, ix: 785, label: 'Bảng KPI', act: inspectKPI },
-      { id: 'keypad', x: 636, y: 236, w: 70, h: 74, ix: 672, label: 'Bàn phím mật mã cửa khu giam', act: openKeypad },
-      { id: 'gate', x: 432, y: 128, w: 200, h: 284, ix: 530, label: () => G.flags.gate ? 'Vào khu giam' : 'Cửa sắt khu giam (CELL)',
-        act: () => {
-          if (!G.flags.gate) return say('Cửa sắt khóa chặt. Bên cạnh có bàn phím nhập mật mã.')();
-          SFX.door(); go('cells', 90, 1);
-        },
-        draw() { if (!G.flags.gate) return; ctx.fillStyle = 'rgba(120,255,150,.18)'; ctx.fillRect(468, 228, 128, 172); } },
-      { id: 'camera', x: 248, y: 80, w: 64, h: 66, ix: 280, label: 'Camera giám sát',
-        act: say('Camera... đèn đỏ không sáng. Chắc chỉ là đồ để dọa. Người canh thật sự là Anh Đại.') },
-      { id: 'mona', x: 0, y: 0, w: 140, h: 265, ix: 90, label: 'Bức tranh',
-        act: say('Tranh Mona Lisa mà cười toe toét. Tới tranh ở đây cũng là hàng giả.', 'happy') },
-      { id: 'blueA', x: 835, y: 130, w: 96, h: 300, ix: 880, label: 'Cửa xanh',
-        act: say('Khóa trái. Bên trong toàn tiếng gõ phím với tiếng gọi điện. Phòng "chạy KPI".') },
-    ],
-  },
-  hallB: {
-    name: 'Hành lang B', bg: 'bg_hallB', floor: 706, h: 400,
-    exits: { right: { to: 'hallA', x: 100, dir: 1, label: 'Hành lang A' } },
-    spots: [
-      { id: 'trash', x: 316, y: 486, w: 70, h: 86, ix: 352, label: 'Thùng rác', act: inspectTrash,
-        draw() { draw('p_trash', 322, 490, 62, 80); } },
-      { id: 'bossdoor', x: 835, y: 104, w: 96, h: 318, ix: 880, label: 'Cửa phòng Anh Đại',
-        act: () => { SFX.door(); go('boss', 1150, -1); } },
-      { id: 'elev', x: 492, y: 145, w: 132, h: 260, ix: 558, label: 'Thang máy',
-        act: say('Thang máy bị khóa, phải có thẻ của Anh Đại mới đi được.') },
-      { id: 'keypadB', x: 632, y: 238, w: 66, h: 64, ix: 664, label: 'Bảng điều khiển thang máy',
-        act: say('Bấm thử... không phản hồi. Phải có thẻ từ.') },
-      { id: 'notice', x: 738, y: 160, w: 94, h: 132, ix: 785, label: 'Bảng thông báo',
-        act: say('"KPI tuần này: 8 người chưa đạt → chuyển phòng tối." Bọn này coi người như máy.') },
-      { id: 'mono', x: 0, y: 0, w: 172, h: 276, ix: 110, label: 'Tranh "Mono Visa"',
-        act: say('"Mono Visa"... Ai vẽ cái này vậy trời.', 'happy') },
-    ],
-  },
-  boss: {
-    name: 'Phòng Anh Đại', bg: 'bg_boss', floor: 712, h: 410,
-    exits: { right: { to: 'hallB', x: 880, dir: -1, label: 'Hành lang B' } },
-    spots: [
-      { id: 'skull', x: 838, y: 172, w: 166, h: 170, ix: 920, label: () => has('key') ? 'Đầu hươu' : 'Đầu hươu... có gì đó treo bên dưới',
-        act: () => has('key') ? say('Cái đầu hươu nhìn mình chằm chằm. Rợn người.')() : inspectSkull(),
-        draw() { if (has('key') || !KEY_GREEN) return; ctx.drawImage(KEY_GREEN, 898, 300, 46, 48); } },
-      { id: 'bosspc', x: 236, y: 428, w: 134, h: 116, ix: 330, label: 'Máy tính của Anh Đại', act: openBossPC },
-      { id: 'board', x: 640, y: 230, w: 162, h: 86, ix: 720, label: 'Bảng ghim',
-        act: say('Ảnh chụp hộ chiếu của mấy người mới bị lừa sang... Bọn chúng giữ giấy tờ để không ai trốn được.') },
-      { id: 'shelf', x: 200, y: 205, w: 280, h: 240, ix: 340, label: 'Kệ hồ sơ',
-        act: say('Toàn hợp đồng "việc nhẹ lương cao" với chữ ký của người bị lừa.') },
-    ],
-  },
-  cells: {
-    name: 'Khu giam', bg: null, floor: 690, h: 380,
-    exits: { left: { to: 'hallA', x: 530, dir: 1, label: 'Hành lang A' } },
-    spots: [],
-  },
+/* ---------------- Views & hotspots (1920×1080 art coordinates) ---------------- */
+const VIEWS = {
+  office: { dai: { x: 760, h: 880 }, arrows: { down: 'hallOffice' }, spots: [
+    { x: 993, y: 700, w: 665, h: 360, label: 'Bàn máy số 4', go: 'desk' },
+    { x: 218, y: 700, w: 742, h: 360, label: 'Bàn máy khác', go: 'desk2' },
+    { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
+  ] },
+  desk: { arrows: { down: 'office' }, spots: [
+    { x: 55, y: 175, w: 556, h: 545, label: 'Màn hình máy số 4', go: 'pc' },
+    { x: 1040, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
+  ] },
+  desk2: { arrows: { down: 'office' }, spots: [] },
+  pc: { arrows: { down: 'desk' }, spots: [
+    { x: 535, y: 170, w: 330, h: 64, label: 'Folder Ho_so_nhan_su', act: () => openFolder('hoso') },
+    { x: 535, y: 246, w: 330, h: 64, label: 'Folder Kich_ban', act: () => openFolder('kichban') },
+    { x: 535, y: 322, w: 330, h: 64, label: 'Folder KPI', act: () => openFolder('kpi') },
+    { x: 535, y: 398, w: 330, h: 64, label: 'Folder Anh', act: () => openFolder('anh') },
+  ], draw: drawPcLabels },
+  corner: { arrows: { down: 'office' }, spots: [
+    { x: 993, y: 131, w: 272, h: 273, label: 'Đồng hồ', act: () => collect('clock') },
+    { x: 1150, y: 600, w: 310, h: 420, label: 'Thùng rác', act: () => collect('paper') },
+  ] },
+  hallOffice: { dai: { x: 400, h: 860 }, arrows: { left: 'hall' }, spots: [
+    { x: 720, y: 153, w: 894, h: 785, label: 'Vào phòng làm việc', go: 'office' },
+  ] },
+  hall: { dai: { x: 930, h: 720 }, arrows: { down: 'hallOffice' }, spots: [
+    { x: 273, y: 240, w: 196, h: 415, label: 'Máy lọc nước', go: 'hallWater' },
+    { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor' },
+    { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI' },
+    { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
+  ] },
+  hallWater: { arrows: { down: 'hall' }, spots: [
+    { x: 1190, y: 630, w: 110, h: 150, label: 'Cái ly', act: () => collect('cup') },
+  ] },
+  hallKPI: { dai: { x: 1140, h: 900 }, arrows: { down: 'hall' }, spots: [
+    { x: 22, y: 76, w: 698, h: 491, label: 'Bảng KPI', act: () => collect('k') },
+    { x: 862, y: 76, w: 556, h: 971, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
+  ] },
+  boss: { dai: { x: 900, h: 900 }, arrows: { down: 'hallKPI' }, spots: [
+    { x: 33, y: 327, w: 665, h: 720, label: 'Góc làm việc', go: 'bossLeft' },
+    { x: 1222, y: 262, w: 698, h: 785, label: 'Góc sofa', go: 'bossRight' },
+  ] },
+  bossLeft: { arrows: { down: 'boss', right: 'bossRight' }, spots: [] },
+  bossRight: { arrows: { down: 'boss', left: 'bossLeft' }, spots: [
+    { x: 720, y: 60, w: 340, h: 480, label: 'Đầu nai', cond: () => !has('key'), act: () => collect('key') },
+  ], draw: () => { if (!has('key') && IMG.keys) ctx.drawImage(IMG.keys, 835, 405, 120, 121); } },
+  cellDoor: { arrows: { down: 'hall' }, spots: [
+    { x: 436, y: 120, w: 797, h: 884, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: cellDoorAct },
+    { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: openKeypad },
+  ], draw: drawCellBars },
+  cells: { arrows: { down: 'cellDoor' }, spots: [
+    { x: 985, y: 125, w: 215, h: 955, label: 'Phòng 602', act: () => cellAct(602) },
+    { x: 760, y: 365, w: 85, h: 635, label: 'Phòng 609', act: () => cellAct(609) },
+    { x: 630, y: 450, w: 50, h: 500, label: 'Phòng 601', act: () => cellAct(601) },
+    { x: 340, y: 510, w: 145, h: 390, label: 'Phòng 603', act: () => cellAct(603) },
+  ] },
 };
-const CELL_X = i => 150 + i * 190;
-for (let i = 0; i < 6; i++) {
-  ROOMS.cells.spots.push({ id: 'cell' + (i + 1), x: CELL_X(i), y: 185, w: 170, h: 390, ix: CELL_X(i) + 85, label: `Buồng giam PK${i + 1}`, act: () => cellAct(i + 1) });
+const lbl = s => typeof s.label === 'function' ? s.label() : s.label;
+const spotsOf = v => VIEWS[v].spots.filter(s => !s.cond || s.cond());
+
+function drawPcLabels() {
+  ctx.font = '30px VT323, monospace'; ctx.fillStyle = '#2b2b24';
+  ['Ho_so_nhan_su' + (G.flags.folder ? '' : ' 🔒'), 'Kich_ban', 'KPI', 'Anh'].forEach((t, i) => ctx.fillText(t, 618, 214 + i * 76));
+}
+function drawCellBars() {
+  if (G.flags.gate) return;
+  ctx.save(); ctx.fillStyle = 'rgba(30,34,32,.55)'; ctx.fillRect(452, 262, 762, 740);
+  ctx.strokeStyle = '#151816'; ctx.lineWidth = 6;
+  for (let x = 470; x < 1214; x += 62) { ctx.fillStyle = '#5d6762'; ctx.fillRect(x, 262, 20, 740); ctx.strokeRect(x, 262, 20, 740); }
+  ctx.fillStyle = '#5d6762'; ctx.fillRect(452, 560, 762, 22); ctx.strokeRect(452, 560, 762, 22);
+  ctx.restore();
 }
 
-/* ---------------- Dialogue ---------------- */
+/* ---------------- Navigation ---------------- */
+function go(view, sfx) {
+  if (G.busy) return;
+  G.busy = true; closeOverlay(true);
+  if (sfx) SFX[sfx](); else SFX.step();
+  ui.fade.classList.add('on');
+  setTimeout(() => {
+    const before = AREA[G.view];
+    G.view = view;
+    if (AREA[view] !== before) { G.grace = Math.max(G.grace, 1.0); if (D.area === AREA[view]) SFX.heart(); }
+    ui.fade.classList.remove('on');
+    setTimeout(() => { G.busy = false; }, 120);
+  }, 220);
+}
+
+/* ---------------- Dialogue (only on puzzle-critical moments) ---------------- */
 const WHO = {
-  ti: { name: 'Tí Công An', face: f => `assets/face_${f || 'angry'}.png` },
-  think: { name: 'Tí (nghĩ thầm)', face: f => `assets/face_${f || 'angry'}.png` },
-  dai: { name: 'Anh Đại', face: () => 'assets/face_dai.png' },
-  yen: { name: 'An Yên', face: () => 'assets/face_yen.png' },
-  sep: { name: 'Thủ trưởng (điện thoại)', icon: '☎️' },
-  sys: { name: '' },
+  ti: { name: 'TÍ CÔNG AN', box: 'ui/box_ti.png', side: 'l' },
+  dai: { name: 'ANH ĐẠI', box: 'ui/box_dai.png', side: 'r', fig: 'chars/dai.png', figSide: 'left' },
+  yen: { name: 'AN YÊN', box: 'ui/box_yen.png', side: 'l', fig: 'chars/yen.png', figSide: 'right' },
 };
 let typeTimer = null, typeFull = '', typeIdx = 0;
 function dialog(lines, done) {
-  G.dq = lines.slice(); G.ddone = done || null; G.dlg = true;
-  ui.dialog.classList.remove('hidden');
+  G.dlg = { q: lines.slice(), done };
+  ui.dialog.classList.remove('hidden'); ui.tip.classList.remove('on');
   nextLine();
 }
 function nextLine() {
-  if (typeTimer && typeIdx < typeFull.length) {
-    clearInterval(typeTimer); typeTimer = null; ui.dText.textContent = typeFull; typeIdx = typeFull.length; return;
-  }
-  const l = G.dq.shift();
-  if (!l) {
-    ui.dialog.classList.add('hidden'); G.dlg = false;
-    const d = G.ddone; G.ddone = null; if (d) d(); return;
-  }
-  if (l.sfx) SFX[l.sfx]();
-  const w = WHO[l.who] || WHO.sys;
-  ui.dName.textContent = w.name;
-  if (w.face) { ui.dPort.className = ''; ui.dPort.textContent = ''; ui.dPort.style.backgroundImage = `url(${w.face(l.face)})`; }
-  else if (w.icon) { ui.dPort.className = ''; ui.dPort.style.backgroundImage = 'none'; ui.dPort.textContent = w.icon; }
-  else { ui.dPort.className = 'none'; }
-  ui.dText.className = l.who === 'sys' ? 'sys' : '';
+  if (!G.dlg) return;
+  if (typeTimer && typeIdx < typeFull.length) { clearInterval(typeTimer); typeTimer = null; ui.dText.textContent = typeFull; typeIdx = typeFull.length; return; }
+  const l = G.dlg.q.shift();
+  if (!l) { stopVoice(); ui.dialog.classList.add('hidden'); const d = G.dlg.done; G.dlg = null; if (d) d(); return; }
+  const w = WHO[l.who];
+  ui.dFrame.src = A(w.box);
+  ui.dName.textContent = w.name; ui.dName.className = w.side;
+  const inScene = l.who === 'dai' && VIEWS[G.view].dai && D.area === AREA[G.view] && G.mode === 'play';
+  if (w.fig && !inScene) { ui.dFig.src = A(w.fig); ui.dFig.className = w.figSide; } else ui.dFig.className = 'hidden';
   typeFull = l.text; typeIdx = 0; ui.dText.textContent = '';
+  playVoice(l.v);
   clearInterval(typeTimer);
   typeTimer = setInterval(() => {
     typeIdx += 2; ui.dText.textContent = typeFull.slice(0, typeIdx);
-    if (typeIdx % 6 === 0) SFX.type();
     if (typeIdx >= typeFull.length) { clearInterval(typeTimer); typeTimer = null; }
-  }, 18);
+  }, 22);
 }
-function skipDialog() { clearInterval(typeTimer); typeTimer = null; typeFull = ''; typeIdx = 0; G.dq = []; nextLine(); }
 ui.dialog.addEventListener('pointerdown', e => { e.stopPropagation(); nextLine(); });
+const L = {
+  intro: { who: 'dai', v: 'intro_dai', text: 'Ê thằng mới! Mày ngồi máy số 4, lo mà làm đi. Hông làm là ăn điện nghe chưa!' },
+  note: { who: 'ti', v: 'note_ti', text: 'Trời đất ơi, mật khẩu dán chình ình trên sổ luôn. St5K, nhớ nè!' },
+  pclock: { who: 'ti', v: 'pclock_ti', text: 'Có khóa nè trời. Mật khẩu ở đâu ta?' },
+  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai bét rồi!' },
+  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'An Yên, phòng 602! Giờ kiếm mật khẩu cửa phòng giam.' },
+  clock: { who: 'ti', v: 'clock_ti', text: 'Số 4 xanh lè trên đồng hồ. Nhớ nè!' },
+  paper: { who: 'ti', v: 'paper_ti', text: 'Lục thùng rác ra được số 20. Hên dữ thần!' },
+  cup: { who: 'ti', v: 'cup_ti', text: 'Cái ly có số 2 nè. Ghi lại liền!' },
+  k: { who: 'ti', v: 'k_ti', text: 'Chữ K vàng chóe trên bảng KPI. Lụm!' },
+  all4: { who: 'ti', v: 'all4_ti', text: 'Đủ 4 ký tự rồi! Ra cửa phòng giam thử coi.' },
+  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa số. Phải có mật khẩu mới vô được.' },
+  kpok: { who: 'ti', v: 'kpok_ti', text: 'Mở rồi! Dễ như ăn cháo!' },
+  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Bíp bíp! Sai rồi, bình tĩnh, bình tĩnh...' },
+  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa treo trên đầu nai. Lụm liền!' },
+  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em! Chìa khóa nằm bên phòng ông trùm á!' },
+  wrongcell: { who: 'ti', v: 'wrongcell_ti', text: 'Hông phải phòng này.' },
+  rescue: { who: 'ti', v: 'rescue_ti', text: 'An Yên! Anh tới rồi, mình về nhà thôi!' },
+  caught: { who: 'dai', v: 'caught_dai', text: 'Lảng vảng làm gì đó hả? Ăn điện nè!' },
+  afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Về chỗ ngồi chạy KPI cho tao!' },
+  gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nha. Mày ở lại đây luôn đi!' },
+};
+
+/* ---------------- Inventory ---------------- */
+const ITEMS = {
+  note: { img: 'props/binder.png', t: 'St5K', name: 'Sổ St5K' },
+  file: { img: 'chars/yen.png', t: '602', name: 'Hồ sơ An Yên' },
+  cup: { img: 'props/cup.png', t: '2', name: 'Ly số 2' },
+  clock: { img: 'props/clock.png', t: '4', name: 'Đồng hồ số 4' },
+  k: { img: 'props/k.png', t: 'K', name: 'Chữ K' },
+  paper: { img: 'props/paper20.png', t: '20', name: 'Giấy số 20' },
+  key: { img: 'props/keys.png', t: '', name: 'Chùm chìa khóa' },
+};
+function renderInv() {
+  ui.inv.innerHTML = Object.entries(ITEMS).map(([id, it]) =>
+    `<div class="slot ${has(id) ? '' : 'empty'}" title="${it.name}"><img src="${A(it.img)}" alt="">${has(id) && it.t ? `<span class="t">${it.t}</span>` : ''}</div>`).join('');
+}
+const ZOOM = { note: 'props/binder.png', clock: 'props/clock.png', paper: 'props/paper20.png', cup: 'props/cup.png', k: 'props/k.png', key: 'props/keys.png' };
+function collect(id) {
+  if (has(id)) { showZoom(ZOOM[id]); return; }
+  showZoom(ZOOM[id]);
+  SFX.pick();
+  dialog([L[id]], () => {
+    closeOverlay(); G.inv.add(id); renderInv();
+    if (id === 'key') { G.alarm = true; G.countdown = 60; bgm('alarm'); toast('Ông trùm sắp phát hiện mất chìa khóa! Nhanh lên!', 3200); }
+    if (LETTERS.includes(id) && LETTERS.every(has) && !G.flags.all4) { G.flags.all4 = true; dialog([L.all4]); }
+  });
+}
 
 /* ---------------- Overlays ---------------- */
-function openOverlay(type, html, mount) {
-  G.overlay = type;
-  ui.panel.className = '';
-  ui.panel.innerHTML = `<button class="x" data-close>✕ Esc</button>` + html;
-  ui.overlay.classList.remove('hidden');
-  ui.panel.querySelectorAll('[data-close]').forEach(b => b.onclick = closeOverlay);
-  if (mount) mount(ui.panel);
+function showZoom(src) {
+  G.overlay = 'zoom';
+  ui.overlay.className = '';
+  ui.overlay.innerHTML = `<img class="zoom" src="${A(src)}" alt="">`;
+  ui.overlay.onpointerdown = e => { if (!G.dlg) closeOverlay(); };
 }
-function closeOverlay() {
+function closeOverlay(silent) {
   if (!G.overlay) return;
-  const t = G.overlay; G.overlay = null;
-  ui.overlay.classList.add('hidden'); ui.panel.innerHTML = '';
-  afterOverlay(t);
-}
-ui.overlay.addEventListener('pointerdown', e => { if (e.target === ui.overlay) closeOverlay(); });
-
-const CLUE = {
-  note: { icon: '📝', name: 'Giấy' }, file: { icon: '🗂️', name: 'Hồ sơ' },
-  c2: { t: '2', name: 'Cốc' }, c4: { t: '4', name: 'Đồng hồ' }, cK: { t: 'K', name: 'KPI' }, c20: { t: '20', name: 'Rác' },
-  key: { icon: '🗝️', name: 'Chìa' }, usb: { icon: '💾', name: 'USB' },
-};
-function addClue(id, msg) {
-  if (has(id)) return;
-  G.inv.add(id); SFX.pick(); toast(msg || `Đã thu thập: ${CLUE[id].name}`);
-  renderInv();
-}
-function renderInv() {
-  const order = ['note', 'file', 'c2', 'c4', 'cK', 'c20', 'key', 'usb'];
-  ui.inv.innerHTML = order.map(id => {
-    const c = CLUE[id], got = has(id);
-    const inner = c.t ? `<span class="t">${got ? c.t : '?'}</span>` : (got ? c.icon : '·');
-    return `<div class="slot ${got ? '' : 'empty'}" title="${c.name}">${inner}<span class="n">${c.name}</span></div>`;
-  }).join('');
+  G.overlay = null; ui.overlay.className = 'hidden'; ui.overlay.innerHTML = ''; ui.overlay.onpointerdown = null;
+  if (!silent) SFX.click();
 }
 
-/* --- Paper note --- */
-function openNote() {
-  openOverlay('note', `
-    <div class="paper">
-      <h3>GIẤY BÀN GIAO MÁY</h3>
-      <div class="date">Campuchia, 30 tháng 2, 2024</div>
-      <div class="warn">Mã truy cập Folder: <u>không giữ ra ngoài dưới mọi hình thức!</u></div>
-      <ul><li>PC01 – 7n2P</li><li>PC02 – 4C9a</li><li>PC03 – J97t</li><li>PC04 – St5K</li></ul>
-      <div class="sign">KIỂM TRA ĐÚNG MÁY</div>
-    </div>
-    <div class="center"><button class="btn" id="take">Cất vào túi</button></div>`,
-    p => p.querySelector('#take').onclick = () => { addClue('note'); closeOverlay(); });
-}
-
-/* --- PC04 computer --- */
-function openComputer() {
-  openOverlay('computer', `
-    <div class="pc">
-      <div class="pc-bar"><span>PC04 · KHU TU TRI OS v0.9</span><span>${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span></div>
-      <div class="pc-body">
-        <div class="pc-icons">
-          <button class="pc-icon" data-f="hoso"><span class="ic">📁</span>Ho_so_nhan_su ${G.flags.folder ? '' : '🔒'}</button>
-          <button class="pc-icon" data-f="kichban"><span class="ic">📁</span>Kich_ban_goi</button>
-          <button class="pc-icon" data-f="kpi"><span class="ic">📁</span>KPI_thang_2</button>
-          <button class="pc-icon" data-f="trash"><span class="ic">🗑️</span>Recycle Bin</button>
-        </div>
-        <div class="pc-win" id="pcwin"><div class="tb">Chào mừng</div><div class="wb">Chào "chuyên viên tư vấn" mới.<br>Hãy chạy KPI. Mọi hoạt động đều được ghi lại.<br><br><span style="color:#777">(Click vào folder bên trái)</span></div></div>
-      </div>
-    </div>`,
-    p => {
-      p.querySelectorAll('.pc-icon').forEach(b => b.onclick = () => { SFX.click(); pcOpen(b.dataset.f, p); });
-      if (G.flags.folder) pcOpen('hoso', p);
-    });
-}
-function pcOpen(f, p) {
-  const win = p.querySelector('#pcwin');
-  const set = (title, body) => { win.innerHTML = `<div class="tb">${title}</div><div class="wb">${body}</div>`; };
+/* --- PC folders (drawn inside the monitor of the "pc" view) --- */
+function openFolder(f) {
+  G.overlay = 'pc'; ui.overlay.className = 'pc';
+  const win = (title, body) => {
+    ui.overlay.innerHTML = `<div class="pcwin"><div class="tb"><span>${title}</span><b data-x>x</b></div><div class="wb">${body}</div></div>`;
+    ui.overlay.querySelector('[data-x]').onclick = () => closeOverlay();
+    return ui.overlay.querySelector('.wb');
+  };
+  ui.overlay.onpointerdown = e => { if (e.target === ui.overlay) closeOverlay(); };
   if (f === 'hoso') {
-    if (G.flags.folder) return set('Ho_so_nhan_su / tot_thi', profileHTML());
-    set('Ho_so_nhan_su 🔒', `
-      <p>🔑 To use this folder, you need Enter Password</p>
-      <p><input id="pw" maxlength="8" autocomplete="off" spellcheck="false"><button id="pwok">OK</button><button id="pwno">Cancel</button></p>
-      <p id="pwmsg"></p>`);
-    const inp = win.querySelector('#pw'); inp.focus();
+    if (G.flags.folder) return win('Ho_so_nhan_su', profileHTML());
+    const wb = win('Ho_so_nhan_su', `To use this folder, you need Enter Password<br><input id="pw" maxlength="8" autocomplete="off" spellcheck="false"><button id="pwok">OK</button><div id="pwmsg"></div>`);
+    const inp = wb.querySelector('#pw'); setTimeout(() => inp.focus(), 50);
+    if (!G.flags.triedPc && !has('note')) { G.flags.triedPc = true; dialog([L.pclock], () => inp.focus()); }
     const submit = () => {
       if (inp.value.trim().toLowerCase() === 'st5k') {
-        SFX.ok(); G.flags.folder = true; addClue('file', 'Mở khóa hồ sơ: An Yên ở buồng PK5');
-        p.querySelector('[data-f="hoso"]').innerHTML = '<span class="ic">📁</span>Ho_so_nhan_su';
-        set('Ho_so_nhan_su / tot_thi', profileHTML());
+        SFX.ok(); G.flags.folder = true; G.inv.add('file'); renderInv();
+        wb.innerHTML = profileHTML(); dialog([L.pcopen]);
       } else {
-        SFX.wrong(); G.wrongPw++;
-        win.querySelector('#pwmsg').innerHTML = `<span class="err">Sai mật khẩu! (${G.wrongPw})</span>` +
-          (G.wrongPw >= 2 && !has('note') ? '<br><span style="color:#555">Mật khẩu chắc được ghi đâu đó quanh bàn làm việc...</span>' : '');
-        win.classList.remove('shake'); void win.offsetWidth; win.classList.add('shake');
-        inp.select();
+        SFX.wrong(); wb.querySelector('#pwmsg').innerHTML = '<span class="err">Wrong password!</span>';
+        const w = ui.overlay.querySelector('.pcwin'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
+        inp.select(); if (!G.flags.saidWrong) { G.flags.saidWrong = true; dialog([L.pcwrong], () => inp.focus()); }
       }
     };
-    win.querySelector('#pwok').onclick = submit;
-    win.querySelector('#pwno').onclick = () => set('Chào mừng', 'Đã hủy.');
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); e.stopPropagation(); if (e.key === 'Escape') closeOverlay(); });
+    wb.querySelector('#pwok').onclick = submit;
+    inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') submit(); if (e.key === 'Escape') closeOverlay(); });
   } else if (f === 'kichban') {
-    set('Kich_ban_goi.txt', `
-      <b>KỊCH BẢN 1: "VIỆC NHẸ LƯƠNG CAO"</b><br>Tuyển người sang Campuchia làm "chăm sóc khách hàng", bao vé máy bay, lương 1.500$/tháng. Tới nơi thì thu hộ chiếu.<br><br>
-      <b>KỊCH BẢN 2: GIẢ DANH CÔNG AN</b><br>Gọi báo "tài khoản của bạn liên quan đường dây rửa tiền", yêu cầu chuyển tiền vào "tài khoản tạm giữ" để xác minh.<br><br>
-      <b>KỊCH BẢN 3: "LÀM NHIỆM VỤ" NHẬN HOA HỒNG</b><br>Cho rút tiền lời vài lần đầu, sau đó bắt nạp số tiền lớn để "mở khóa" tài khoản.<br><br>
-      <span class="hl">Tí: Công an thật không bao giờ yêu cầu chuyển tiền qua điện thoại.</span>`);
+    win('Kich_ban.txt', `<b>KỊCH BẢN 1:</b> "Việc nhẹ lương cao" bên Campuchia, bao vé máy bay. Tới nơi thu hộ chiếu.<br><br><b>KỊCH BẢN 2:</b> Giả danh công an gọi báo "tài khoản dính rửa tiền", bắt chuyển tiền "xác minh".<br><br><span class="hl">Công an thật không bao giờ bắt chuyển tiền qua điện thoại!</span>`);
   } else if (f === 'kpi') {
-    set('KPI_thang_2.xls', `
-      <table><tr><th>Nhân viên</th><th>Doanh thu</th><th>Cấp</th></tr>
-      <tr><td>Trình</td><td>20 tỷ</td><td>★★★</td></tr><tr><td>Bảo</td><td>14 tỷ</td><td>★★</td></tr>
-      <tr><td>Hưng</td><td>10 tỷ</td><td>★</td></tr><tr><td>An Yên</td><td class="err">0 đ</td><td class="err">TỐT THÍ</td></tr></table>
-      <p>Chỉ tiêu tháng: <b>20 tỷ / người</b>. Không đạt → chích điện + giam lỏng.</p>`);
+    win('KPI.xls', `<table><tr><th>Mã</th><th>Doanh thu</th><th>Ghi chú</th></tr><tr><td>03-VAN</td><td>107%</td><td>✓</td></tr><tr><td>02-THI</td><td>67%</td><td>✓</td></tr><tr><td>04-TÍ</td><td>...</td><td>...</td></tr><tr><td>01-ANYEN</td><td class="err">6%</td><td class="err">FAILED</td></tr></table>`);
   } else {
-    set('Recycle Bin', 'Thùng rác trống.<br><span style="color:#777">Ai đó dọn sạch rồi... nhưng thùng rác thật ngoài hành lang thì chưa chắc.</span>');
+    win('Anh', 'Ảnh hộ chiếu của những người mới bị lừa sang...<br><br><span class="err">(Bọn chúng giữ giấy tờ để không ai trốn được.)</span>');
   }
 }
 function profileHTML() {
-  return `<div class="profile"><div class="ph" style="background-image:url(assets/face_yen.png)"></div>
-    <div>Name: <b>Nguyễn An Yên</b><br>Date: 01-04-2007<br>Born: Việt Nam<br>Status: <span class="err">Tốt thí (không đạt KPI)</span><br>
-    Prison cell: <span class="hl"><b>PK5</b></span></div></div>`;
+  return `<div class="profile"><div class="ph" style="background-image:url(${A('chars/yen.png')})"></div>
+    <div>Name: <b>Nguyễn An Yên</b><br>Date: 01-04-2007<br>Born: Việt Nam<br>Status: <span class="err">FAILED KPI</span><br>Prison cell: <span class="hl"><b>602</b></span></div></div>`;
 }
 
-/* --- Inspect helpers --- */
-function inspect(type, title, art, clueId, caption) {
-  const got = has(clueId);
-  openOverlay(type, `<h2>${title}</h2><div class="center">${art}</div><p class="cap">${caption}</p>
-    <div class="center"><button class="btn" id="take" ${got ? 'disabled' : ''}>${got ? 'Đã ghi nhớ' : 'Ghi nhớ ký tự màu xanh'}</button></div>`,
-    p => p.querySelector('#take').onclick = () => { addClue(clueId, `Ghi nhớ ký tự: ${CLUE[clueId].t}`); closeOverlay(); });
-}
-function inspectClock() {
-  let nums = '';
-  for (let i = 1; i <= 12; i++) {
-    const a = i / 12 * Math.PI * 2 - Math.PI / 2, x = 150 + 104 * Math.cos(a), y = 150 + 104 * Math.sin(a);
-    nums += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${i === 4 ? 46 : 26}" font-weight="800" fill="${i === 4 ? '#2fb54a' : '#111'}" font-family="Be Vietnam Pro">${i}</text>`;
-  }
-  const hand = (ang, len, w, c) => { const a = ang - Math.PI / 2; return `<line x1="150" y1="150" x2="${150 + len * Math.cos(a)}" y2="${150 + len * Math.sin(a)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`; };
-  const art = `<svg viewBox="0 0 300 300" width="300" height="300"><circle cx="150" cy="150" r="138" fill="#fffaf0" stroke="#111" stroke-width="9"/>${nums}
-    ${hand(8 / 12 * Math.PI * 2, 62, 9, '#111')}${hand(0, 92, 6, '#111')}${hand(4 / 12 * Math.PI * 2, 100, 3, '#c8342b')}<circle cx="150" cy="150" r="8" fill="#111"/></svg>`;
-  inspect('clock', 'Đồng hồ treo tường', art, 'c4', 'Đồng hồ chỉ 8:00. Kim giây cứ giật qua giật lại ở số <b style="color:#2fb54a">4</b>, và số 4 được tô màu xanh khác hẳn mấy số còn lại.');
-}
-function inspectCup() {
-  const art = `<svg viewBox="0 0 260 280" width="240" height="260"><path d="M40 30 L220 30 L190 260 L70 260 Z" fill="#fff" stroke="#111" stroke-width="8" stroke-linejoin="round"/>
-    <ellipse cx="130" cy="30" rx="90" ry="14" fill="#e8f4ff" stroke="#111" stroke-width="7"/>
-    <text x="130" y="175" text-anchor="middle" font-size="130" font-weight="800" fill="#2fb54a" font-family="Be Vietnam Pro">2</text></svg>`;
-  inspect('cup', 'Cốc giấy ở máy lọc nước', art, 'c2', 'Cốc của ai đó để quên, trên thân có số <b style="color:#2fb54a">2</b> màu xanh lá.');
-}
-function inspectKPI() {
-  const art = `<svg viewBox="0 0 360 300" width="360" height="300"><rect x="10" y="10" width="340" height="280" fill="#fff" stroke="#111" stroke-width="8"/>
-    <text x="70" y="100" font-size="92" font-weight="800" fill="#2fb54a" font-family="Be Vietnam Pro">K</text>
-    <text x="140" y="100" font-size="92" font-weight="800" fill="#111" font-family="Be Vietnam Pro">PI</text>
-    <text x="40" y="170" font-size="26" fill="#111" font-family="Patrick Hand">1st 👤 Doanh thu 20 tỷ (Trình)</text>
-    <text x="40" y="215" font-size="26" fill="#111" font-family="Patrick Hand">2nd 👤 Doanh thu 14 tỷ (Bảo)</text>
-    <text x="40" y="260" font-size="26" fill="#c8342b" font-family="Patrick Hand">Cuối bảng → phòng tối</text></svg>`;
-  inspect('kpi', 'Bảng KPI "đào lửa"', art, 'cK', 'Chữ <b style="color:#2fb54a">K</b> trong chữ KPI được tô xanh. "Chạy KPI tới chết", văn hóa của nơi này.');
-}
-function inspectTrash() {
-  const art = `<svg viewBox="0 0 320 260" width="320" height="260"><path d="M30 40 L120 18 L210 34 L292 22 L300 120 L284 236 L180 222 L90 244 L24 226 L38 130 Z" fill="#f3ead2" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
-    <path d="M60 70 L110 90 M200 60 L250 90 M70 200 L120 180" stroke="#bbb" stroke-width="3"/>
-    <text x="160" y="96" text-anchor="middle" font-size="52" fill="#111" font-family="Patrick Hand">SBD</text>
-    <text x="160" y="134" text-anchor="middle" font-size="30" fill="#111" font-family="Patrick Hand">PC09</text>
-    <text x="160" y="214" text-anchor="middle" font-size="90" font-weight="800" fill="#2fb54a" font-family="Be Vietnam Pro">20</text></svg>`;
-  inspect('trash', 'Tờ giấy vo tròn trong thùng rác', art, 'c20', 'Lục thùng rác thấy một tờ "SBD PC09" bị vò nát. Con số <b style="color:#2fb54a">20</b> được viết bằng mực xanh.');
-}
-function inspectSkull() {
-  openOverlay('skull', `<h2>Đầu hươu treo tường</h2><div class="center"><canvas id="skc" width="420" height="380" style="border:3px solid #111;background:#fff"></canvas></div>
-    <p class="cap">Một chùm chìa khóa màu xanh móc trên sừng hươu. Đây chắc chắn là chìa <b>buồng giam</b>. Lấy là hắn sẽ sớm phát hiện!</p>
-    <div class="center"><button class="btn red" id="take">Lấy chìa khóa</button></div>`,
-    p => {
-      const c = p.querySelector('#skc').getContext('2d');
-      if (IMG.bg_boss) { const sx = IMG.bg_boss.width / W, sy = IMG.bg_boss.height / H; c.drawImage(IMG.bg_boss, 800 * sx, 160 * sy, 240 * sx, 217 * sy, 0, 0, 420, 380); }
-      if (KEY_GREEN) c.drawImage(KEY_GREEN, (898 - 800) * 1.75, (300 - 160) * 1.75, 46 * 1.75, 48 * 1.75);
-      p.querySelector('#take').onclick = () => { takeKey(); closeOverlay(); };
-    });
-}
-function takeKey() {
-  addClue('key', 'Lấy được chìa khóa buồng giam!');
-  G.alarm = true; G.countdown = 90; bgm('alarm');
-  G.flags.keyMsg = true;
-}
-function openBossPC() {
-  const got = has('usb');
-  openOverlay('bosspc', `
-    <div class="pc" style="height:440px">
-      <div class="pc-bar"><span>LAPTOP — TRỊNH TRẦN ANH ĐẠI</span><span>🔓</span></div>
-      <div class="pc-body"><div class="pc-win"><div class="tb">So_sach_that.xls</div><div class="wb">
-        <table><tr><th>Mã "hàng"</th><th>Quê</th><th>Giá mua</th><th>Đã lừa được</th></tr>
-        <tr><td>PK1</td><td>Đồng Tháp</td><td>3.000$</td><td>1,2 tỷ</td></tr>
-        <tr><td>PK3</td><td>Nghệ An</td><td>3.500$</td><td>2,8 tỷ</td></tr>
-        <tr><td>PK5</td><td>Sài Gòn</td><td>2.000$</td><td class="err">0đ (phạt)</td></tr></table>
-        <p>Tài khoản trung gian, danh sách "đại lý tuyển dụng"... Đây là bằng chứng đủ để triệt phá cả đường dây.</p>
-        <button id="copy" class="btn teal" ${got ? 'disabled' : ''}>${got ? 'Đã chép vào USB' : '💾 Chép dữ liệu vào USB'}</button>
-        <div class="progress"><div id="pg" style="width:${got ? 100 : 0}%"></div></div>
-      </div></div></div>
-    </div>`,
-    p => {
-      const b = p.querySelector('#copy');
-      b.onclick = () => {
-        b.disabled = true; b.textContent = 'Đang chép... đừng để bị phát hiện!';
-        let v = 0; const pg = p.querySelector('#pg');
-        const iv = setInterval(() => {
-          if (G.overlay !== 'bosspc') { clearInterval(iv); return; }
-          if (G.dlg || G.paused) return;
-          v += 4; pg.style.width = v + '%'; SFX.type();
-          if (v >= 100) { clearInterval(iv); addClue('usb', 'Đã chép bằng chứng vào USB'); b.textContent = 'Đã chép vào USB'; }
-        }, 160);
-      };
-    });
-}
-
-/* --- Keypad --- */
+/* --- Keypad of the prison door --- */
 function openKeypad() {
-  if (G.flags.gate) return say('Cửa khu giam đã mở rồi.', 'happy')();
+  if (G.flags.gate) { toast('Cửa phòng giam đã mở.'); return; }
   let code = '';
-  openOverlay('keypad', `<h2 class="center">Khóa cửa khu giam</h2>
-    <div class="kp">
-      <div class="kp-icons"><div>🥤</div><div>⏰</div><div>📋</div><div class="span2">🗑️</div></div>
-      <div class="kp-screen" id="scr">${'<div></div>'.repeat(5)}</div>
-      <div class="kp-keys" id="keys"></div>
-      <p class="cap center" id="kmsg" style="margin:4px 0 0">Nhập 5 ký tự. Có hình gợi ý phía trên mỗi ô.</p>
-    </div>`,
-    p => {
-      const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'K', 'P', 'S', 'T', '⌫', 'OK'];
-      const box = p.querySelector('#keys');
-      box.innerHTML = keys.map(k => `<button data-k="${k}" class="${k === 'OK' ? 'ok' : k === '⌫' ? 'del' : ''}" ${k === 'OK' ? 'style="grid-column:span 2"' : ''}>${k}</button>`).join('');
-      const scr = p.querySelector('#scr');
-      const show = () => [...scr.children].forEach((d, i) => d.textContent = code[i] || '');
-      const press = k => {
-        SFX.click();
-        if (k === '⌫') code = code.slice(0, -1);
-        else if (k === 'OK') {
-          if (code === '24K20') {
-            SFX.ok(); SFX.door(); G.flags.gate = true; closeOverlay();
-            dialog([{ who: 'ti', face: 'happy', text: '2 - 4 - K - 20... Cửa khu giam mở rồi!' }]);
-            return;
-          }
-          SFX.wrong(); code = '';
-          const m = p.querySelector('#kmsg'); m.innerHTML = '<span style="color:#c8342b;font-weight:800">BÍP BÍP! Sai mật mã. Tiếng kêu to quá...</span>';
-          scr.classList.remove('shake'); void scr.offsetWidth; scr.classList.add('shake');
-          if (D.room === G.room) G.det = Math.min(99, G.det + 15);
-        } else if (code.length < 5) code += k;
-        show();
-      };
-      box.querySelectorAll('button').forEach(b => b.onclick = () => press(b.dataset.k));
-      p._key = e => {
-        const k = e.key.toUpperCase();
-        if (/^[0-9AKPST]$/.test(k)) press(k);
-        else if (e.key === 'Backspace') press('⌫');
-        else if (e.key === 'Enter') press('OK');
-      };
-    });
+  G.overlay = 'keypad'; ui.overlay.className = '';
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'K', 'P', 'S', 'T', '⌫', 'OK'];
+  ui.overlay.innerHTML = `<div class="kp"><h2>CELL</h2><div class="kp-screen">${'<div></div>'.repeat(5)}</div>
+    <div class="kp-keys">${keys.map(k => `<button data-k="${k}" class="${k === 'OK' ? 'ok' : k === '⌫' ? 'del' : ''}">${k}</button>`).join('')}</div>
+    <div class="kp-msg">Nhập 5 ký tự</div></div><button class="xbtn" data-x>✕ Esc</button>`;
+  const scr = ui.overlay.querySelector('.kp-screen'), msg = ui.overlay.querySelector('.kp-msg');
+  const show = () => [...scr.children].forEach((d, i) => d.textContent = code[i] || '');
+  const press = k => {
+    SFX.key();
+    if (k === '⌫') code = code.slice(0, -1);
+    else if (k === 'OK') {
+      if (code === '24K20') { SFX.ok(); SFX.door(); G.flags.gate = true; closeOverlay(true); dialog([L.kpok]); return; }
+      SFX.wrong(); code = ''; msg.textContent = 'SAI MẬT MÃ';
+      scr.classList.remove('shake'); void scr.offsetWidth; scr.classList.add('shake');
+      if (D.area === AREA[G.view]) G.det = Math.min(99, G.det + 15);
+      if (!G.flags.saidKp) { G.flags.saidKp = true; dialog([L.kpwrong]); }
+    } else if (code.length < 5) code += k;
+    show();
+  };
+  ui.overlay.querySelectorAll('[data-k]').forEach(b => b.onclick = () => press(b.dataset.k));
+  ui.overlay.querySelector('[data-x]').onclick = () => closeOverlay();
+  ui.overlay.onpointerdown = e => { if (e.target === ui.overlay) closeOverlay(); };
+  G.keypad = e => {
+    const k = e.key.toUpperCase();
+    if (/^[0-9AKPST]$/.test(k)) press(k); else if (e.key === 'Backspace') press('⌫'); else if (e.key === 'Enter') press('OK');
+  };
 }
-
-/* --- Cells --- */
+function cellDoorAct() {
+  if (!G.flags.gate) return dialog([L.doorlocked]);
+  go('cells', 'door');
+}
 function cellAct(n) {
-  if (n !== 5) {
-    const t = {
-      1: 'PK1... có người co ro trong góc, không dám ngẩng lên. Mình sẽ quay lại cứu tất cả các người.',
-      2: 'PK2 trống. Trên tường chi chít vạch đếm ngày.',
-      3: 'PK3... một người đàn ông thì thào: "Đừng để hắn thấy..."',
-      4: 'PK4 trống. Chỉ có cái chiếu rách.',
-      6: 'PK6 trống. Mùi ẩm mốc nồng nặc.',
-    }[n];
-    return dialog([{ who: 'ti', face: 'shock', text: (has('key') ? 'Chìa không khớp ổ khóa này. ' : '') + t }]);
-  }
-  if (!has('key')) {
-    return dialog([
-      { who: 'yen', text: 'Anh... anh không giống người của bọn chúng. Làm ơn, cứu em với...' },
-      { who: 'ti', face: 'angry', text: 'Suỵt. Anh là công an. Ổ khóa này cần chìa, em có biết chìa ở đâu không?' },
-      { who: 'yen', text: 'Hắn... Anh Đại treo chùm chìa trên cái đầu hươu trong phòng hắn. Cửa xanh ở hành lang B.' },
-    ], () => G.flags.yenHint = true);
-  }
-  rescue();
-}
-function rescue() {
-  SFX.door(); G.flags.rescued = true; G.alarm = false; bgm('calm');
-  dialog([
-    { who: 'sys', text: '*Cạch* Ổ khóa buồng PK5 bật mở.' },
-    { who: 'ti', face: 'happy', text: 'An Yên! Anh là Tí, công an Việt Nam. Anh đến đưa em về nhà.' },
-    { who: 'yen', text: 'Thật... thật sao? Em cứ tưởng sẽ không bao giờ ra khỏi đây được...' },
-    { who: 'ti', face: 'angry', text: 'Nắm chặt tay anh. Giờ mình phải quyết định thật nhanh.' },
-  ], endingChoice);
+  if (n !== 602) return dialog([L.wrongcell]);
+  if (!has('key')) return dialog([L.nokey]);
+  SFX.door(); G.flags.rescued = true; G.alarm = false;
+  dialog([L.rescue], () => playVideo('cut3', endScreen));
 }
 
-/* ---------------- Transitions ---------------- */
-function go(room, x, dir) {
-  if (G.trans) return;
-  G.trans = true; closeOverlay();
-  ui.fade.classList.add('on');
-  setTimeout(() => {
-    G.room = room; P.x = x; P.dir = dir; P.target = null; P.after = null; G.grace = 0.9;
-    ui.fade.classList.remove('on');
-    setTimeout(() => { G.trans = false; onEnter(room); }, 220);
-  }, 260);
+/* ---------------- Cutscenes ---------------- */
+function playVideo(name, done) {
+  G.video = true; stopVoice();
+  const v = ui.video; v.src = A(`video/${name}.mp4`); v.currentTime = 0;
+  v.classList.remove('hidden'); ui.vskip.classList.remove('hidden');
+  v.volume = Math.max(SET.sfx, SET.music);
+  let finished = false;
+  const end = () => { if (finished) return; finished = true; v.pause(); v.classList.add('hidden'); ui.vskip.classList.add('hidden'); G.video = false; G.skipVideo = null; done && done(); };
+  v.onended = end; v.onerror = end;
+  G.skipVideo = end;
+  v.play().catch(() => { v.muted = true; v.play().catch(end); });
 }
-function onEnter(room) {
-  if (D.room === room) SFX.heart();
-  if (room === 'cells' && !G.flags.cellsSeen) {
-    G.flags.cellsSeen = true;
-    dialog([{ who: 'think', face: 'shock', text: 'Khu giam... Tối và ẩm. Phải tìm buồng PK5.' }]);
-  }
-  if (room === 'boss' && !G.flags.bossSeen) {
-    G.flags.bossSeen = true;
-    dialog([{ who: 'think', face: 'shock', text: 'Phòng của Anh Đại. Phải làm nhanh trước khi hắn quay lại!' }]);
-  }
-}
-function afterOverlay(t) {
-  if (t === 'computer' && G.flags.folder && !G.flags.toldCode) {
-    G.flags.toldCode = true;
-    dialog([
-      { who: 'think', face: 'angry', text: 'An Yên ở buồng PK5. Khu giam nằm sau cửa sắt "CELL" ở Hành lang A.' },
-      { who: 'think', face: 'angry', text: 'Cửa đó khóa bằng mật mã 5 ký tự. Để ý mấy ký tự màu xanh lá mà bọn chúng đánh dấu quanh đây.' },
-    ]);
-  }
-  if (LETTERS.every(has) && !G.flags.allLetters) {
-    G.flags.allLetters = true;
-    dialog([{ who: 'think', face: 'happy', text: 'Đủ 4 manh mối: 2, 4, K, 20. Thử ở bàn phím cạnh cửa khu giam, theo thứ tự hình gợi ý.' }]);
-  }
-  if (t === 'skull' && has('key') && G.flags.keyMsg) {
-    G.flags.keyMsg = false;
-    dialog([
-      { who: 'ti', face: 'shock', text: 'Có chìa rồi! Hắn mà phát hiện là toi. Phải tới buồng PK5 ngay!' },
-      { who: 'sys', text: 'Bạn có 90 giây trước khi Anh Đại phát hiện mất chìa khóa.' },
-    ]);
-  }
-}
+ui.video.addEventListener('pointerdown', () => G.skipVideo && G.skipVideo());
 
-/* ---------------- Caught / game over ---------------- */
-function caught(reason) {
-  if (G.dlg) return;
-  closeOverlay();
-  SFX.zap(); ui.flash.classList.remove('zap'); void ui.flash.offsetWidth; ui.flash.classList.add('zap');
-  G.lives--; G.caughtN++; G.det = 0; D.chasing = false; D.sayT = 0;
-  const hadKey = has('key') && !G.flags.rescued;
-  if (hadKey) { G.inv.delete('key'); G.alarm = false; G.countdown = 0; bgm('calm'); renderInv(); }
-  const lines = reason === 'time'
-    ? [{ who: 'dai', text: 'Chìa khóa của tao đâu?! Thằng mới... Là MÀY!' }]
-    : [{ who: 'dai', text: pick(['Bắt được mày rồi! Lảng vảng làm gì hả?!', 'Thằng mới mà dám rình mò à?!', 'Tao thấy hết rồi nhé!']) }];
-  lines.push({ who: 'sys', sfx: 'zap', text: '*Bzzzt!* Dùi cui điện chích thẳng vào người Tí.' });
-  lines.push({ who: 'ti', face: 'shock', text: 'Áááá!!!' });
-  if (G.lives <= 0) return dialog(lines, gameOver);
-  if (hadKey) lines.push({ who: 'dai', text: 'Chìa khóa tao lấy lại rồi. Đừng có mơ.' });
-  lines.push({ who: 'dai', text: 'Về chỗ ngồi chạy KPI! Lần sau tao không nhẹ tay đâu.' });
-  dialog(lines, () => {
-    G.room = 'office'; P.x = 1000; P.dir = -1; P.target = null; P.after = null;
-    Object.assign(D, { room: 'office', x: 700, dir: 1, state: 'walkOut', ri: 3, goal: -60 });
-    G.grace = 2;
-  });
-}
-function gameOver() {
-  G.mode = 'end'; bgm('menu'); ui.hud.classList.add('hidden');
-  showScreen(`<div class="sheet"><div class="inner center">
-    <h1 style="color:#c8342b">BỊ LỘ THÂN PHẬN</h1>
-    <p>Tí Công An bị Anh Đại bắt quả tang lần thứ ba. Nhiệm vụ thất bại...</p>
-    <div class="stats"><div>Thời gian<span>${fmt(G.elapsed)}</span></div><div>Manh mối<span>${G.inv.size}/8</span></div></div>
-    <button class="btn" id="again">Chơi lại</button> <button class="btn teal" id="tomenu">Về menu</button>
-  </div></div>`, s => { s.querySelector('#again').onclick = startGame; s.querySelector('#tomenu').onclick = showMenu; });
-}
-
-/* ---------------- Ending ---------------- */
-function endingChoice() {
-  G.mode = 'end'; ui.hud.classList.add('hidden');
-  showScreen(`<div class="sheet"><div class="inner">
-    <h1>LỰA CHỌN CUỐI</h1>
-    <p>An Yên đã được giải thoát. Còi báo động có thể vang lên bất cứ lúc nào. Tí sẽ làm gì?</p>
-    <div class="choice">
-      <button id="cA">🏃 Đưa An Yên thoát ra ngay<small>Lẻn ra cửa khẩu Mộc Bài, gặp lực lượng hỗ trợ bên kia biên giới.</small></button>
-      <button id="cB">📞 Gọi lực lượng ập vào, đối đầu Anh Đại<small>Rủi ro hơn. Cần đủ bằng chứng để bắt hắn.</small></button>
-    </div></div></div>`, s => {
-    s.querySelector('#cA').onclick = () => ending('A');
-    s.querySelector('#cB').onclick = () => ending('B');
-  });
-}
-function ending(c) {
-  const ev = has('usb');
-  let title, body, lines = [];
-  if (c === 'A') {
-    title = 'VỀ NHÀ';
-    body = `Tí đưa An Yên lẻn qua cửa khẩu Mộc Bài ngay trong đêm. Cô được đoàn tụ với gia đình.` +
-      (ev ? ` Dữ liệu trong USB giúp cơ quan chức năng triệt phá đường dây của Anh Đại vài tuần sau đó.` : ` Nhưng Anh Đại và "khu tự trị" vẫn còn đó, cùng những nạn nhân khác...`);
-  } else if (ev) {
-    title = 'PHÁ ĐƯỜNG DÂY';
-    lines = [
-      { who: 'dai', text: 'Thằng nhân viên mới... Mày là công an?!' },
-      { who: 'ti', face: 'angry', text: 'Trịnh Trần Anh Đại! Toàn bộ sổ sách của anh đã nằm trong chiếc USB này.' },
-      { who: 'ti', face: 'happy', text: 'Lực lượng đã bao vây tòa nhà. Hết đường chạy rồi!' },
-    ];
-    body = 'Lực lượng chức năng hai nước phối hợp ập vào khu tự trị. Anh Đại bị bắt, hàng chục nạn nhân ở các buồng PK được giải cứu. Đường dây "việc nhẹ lương cao" bị xóa sổ.';
-  } else {
-    title = 'KẺ TRỐN THOÁT';
-    lines = [
-      { who: 'dai', text: 'Công an à? Bằng chứng đâu mà bắt tao? Ha ha ha!' },
-      { who: 'ti', face: 'shock', text: 'Khốn kiếp... Lẽ ra mình phải lấy được sổ sách của hắn!' },
-    ];
-    body = 'An Yên được an toàn, nhưng thiếu bằng chứng nên Anh Đại tẩu thoát qua cửa sau. (Mẹo: máy tính trong phòng Anh Đại chứa sổ sách lừa đảo.)';
-  }
-  const show = () => {
-    bgm('menu');
-    showScreen(`<div class="sheet"><div class="inner">
-      <div class="lbl">KẾT THÚC ${c === 'B' && ev ? '★ TỐT NHẤT' : ''}</div>
-      <h1>${title}</h1>
-      <p>${body}</p>
-      <div class="stats"><div>Thời gian<span>${fmt(G.elapsed)}</span></div><div>Bị chích điện<span>${G.caughtN}</span></div><div>Bằng chứng<span>${ev ? 'CÓ' : 'KHÔNG'}</span></div></div>
-      <div class="aware"><b>Hãy tỉnh táo trước lừa đảo:</b>
-        <ul style="margin:6px 0">
-          <li>Lời mời "việc nhẹ lương cao" ở nước ngoài, bao vé máy bay, không cần kinh nghiệm thường là bẫy.</li>
-          <li>Công an không làm việc qua điện thoại và không bao giờ yêu cầu chuyển tiền để "xác minh".</li>
-          <li>Không giao hộ chiếu, giấy tờ cho người lạ. Có nghi vấn, hãy báo ngay cho công an (113).</li>
-        </ul></div>
-      <p style="font-size:13px;color:#555;margin-top:12px">ANO301 · Nhóm 3 · GVHD: BinhLTT: Đặng Ngọc Trinh, Phạm Trần Mai Anh, Nguyễn Ngọc Anh Thư, Nguyễn Huỳnh Thiên Duyên, Võ Ngọc Thái An</p>
-      <button class="btn" id="again">Chơi lại</button> <button class="btn teal" id="tomenu">Về menu</button>
-    </div></div>`, s => { s.querySelector('#again').onclick = startGame; s.querySelector('#tomenu').onclick = showMenu; });
-  };
-  hideScreen();
-  if (lines.length) { G.cut = 'end'; dialog(lines, show); } else show();
-}
-
-/* ---------------- Screens ---------------- */
-function showScreen(html, mount) {
-  ui.screen.innerHTML = html; ui.screen.classList.remove('hidden');
-  if (mount) mount(ui.screen);
-}
-function hideScreen() { ui.screen.classList.add('hidden'); ui.screen.innerHTML = ''; }
-
-function showMenu() {
-  G.mode = 'menu'; G.cut = null; G.dlg = false; G.overlay = null; G.paused = false;
-  ui.dialog.classList.add('hidden'); ui.overlay.classList.add('hidden'); ui.hud.classList.add('hidden');
-  bgm('menu');
-  showScreen(`
-    <button class="menu-hit" style="left:58px;top:288px;width:266px;height:62px" id="m-play" aria-label="Play Game"></button>
-    <button class="menu-hit" style="left:52px;top:366px;width:230px;height:62px" id="m-opt" aria-label="Options"></button>
-    <button class="menu-hit" style="left:52px;top:442px;width:252px;height:64px" id="m-more" aria-label="More games"></button>
-    <div class="menu-foot">Mẹo: chơi với tai nghe · <kbd>←</kbd><kbd>→</kbd> di chuyển · <kbd>E</kbd> tương tác</div>`,
-    s => {
-      s.querySelector('#m-play').onclick = () => { ac(); SFX.click(); startGame(); };
-      s.querySelector('#m-opt').onclick = () => { ac(); SFX.click(); showOptions(); };
-      s.querySelector('#m-more').onclick = () => { ac(); SFX.click(); showCredits(); };
-    });
-}
-function helpHTML() {
-  return `<h3>Điều khiển</h3>
-    <p><kbd>←</kbd> <kbd>→</kbd> hoặc <kbd>A</kbd> <kbd>D</kbd>: di chuyển, đi ra mép màn hình để sang phòng khác<br>
-    <kbd>E</kbd> / <kbd>Space</kbd>: tương tác khi đứng gần đồ vật (hoặc click thẳng vào đồ vật)<br>
-    <kbd>H</kbd>: gợi ý · <kbd>Esc</kbd>: đóng cửa sổ / tạm dừng</p>
-    <h3>Sinh tồn trong khu tự trị</h3>
-    <p>Anh Đại đi tuần giữa các phòng. Khi hắn nhìn thấy bạn làm việc khả nghi, <b>Mức nghi ngờ</b> tăng.
-    Đứng ở <b>bàn PC04</b> (hoặc dùng máy PC04) để giả vờ làm việc. Đầy thanh nghi ngờ thì bị chích điện. Bị bắt 3 lần là thua.</p>`;
-}
-function showOptions() {
-  showScreen(`<div class="sheet"><div class="inner">
-    <h1>Options</h1>
-    <p><label><input type="checkbox" id="snd" ${AU.on ? 'checked' : ''}> Âm thanh</label></p>
-    ${helpHTML()}
-    <button class="btn" id="back">Quay lại</button></div></div>`, s => {
-    s.querySelector('#snd').onchange = e => { AU.on = e.target.checked; };
-    s.querySelector('#back').onclick = showMenu;
-  });
-}
-function showCredits() {
-  showScreen(`<div class="sheet"><div class="inner">
-    <h1>Cuộc Gọi Từ Campuchia</h1>
-    <p>Game phiêu lưu giải đố nâng cao nhận thức về lừa đảo và mua bán người.</p>
-    <h3>ANO301 · Nhóm 3 · GVHD: BinhLTT</h3>
-    <ul><li>Đặng Ngọc Trinh (SE201998)</li><li>Phạm Trần Mai Anh (SE203855)</li><li>Nguyễn Ngọc Anh Thư (SE201075)</li>
-    <li>Nguyễn Huỳnh Thiên Duyên (SE192780)</li><li>Võ Ngọc Thái An (SE201693)</li></ul>
-    <p>Bản này gồm <b>Map 1</b>. Map 2 (căn tin) sẽ được bổ sung.</p>
-    <button class="btn" id="back">Quay lại</button></div></div>`, s => s.querySelector('#back').onclick = showMenu);
-}
-function showPause() {
-  G.paused = true;
-  showScreen(`<div class="sheet"><div class="inner">
-    <h1>Tạm dừng</h1>${helpHTML()}
-    <p><label><input type="checkbox" id="snd" ${AU.on ? 'checked' : ''}> Âm thanh</label></p>
-    <button class="btn" id="resume">Tiếp tục</button> <button class="btn teal" id="tomenu">Về menu chính</button></div></div>`, s => {
-    s.querySelector('#snd').onchange = e => { AU.on = e.target.checked; };
-    s.querySelector('#resume').onclick = resume;
-    s.querySelector('#tomenu').onclick = showMenu;
-  });
-}
-function resume() { G.paused = false; hideScreen(); }
-
-function startGame() {
-  hideScreen(); newGame(); renderInv();
-  G.mode = 'play'; G.cut = 'call'; ui.hud.classList.add('hidden');
-  bgm(null);
-  dialog([
-    { who: 'sys', sfx: 'ring', text: 'TP. Hồ Chí Minh, 23 giờ 47. Điện thoại của Tí reo liên hồi...' },
-    { who: 'ti', face: 'shock', text: 'Alo? Ai gọi giờ này vậy...' },
-    { who: 'sep', text: 'Tí, tôi đây. Có vụ khẩn.' },
-    { who: 'sep', text: 'Một cô gái tên Nguyễn An Yên bị lừa sang Campuchia với lời hứa "việc nhẹ lương cao". Gia đình mất liên lạc đã ba tuần.' },
-    { who: 'sep', text: 'Cô ấy đang bị giam trong một "khu tự trị" ở Bavet, sát cửa khẩu Mộc Bài. Trùm ở đó là Trịnh Trần Anh Đại.' },
-    { who: 'ti', face: 'angry', text: 'Anh Đại... Em nghe danh hắn rồi.' },
-    { who: 'sep', text: 'Cậu sẽ cải trang thành một thanh niên bị lừa sang làm "chuyên viên tư vấn". Trà trộn, tìm vị trí An Yên, đưa cô ấy ra.' },
-    { who: 'sep', text: 'Nhớ kỹ: ở đó KPI là sinh mạng. Đừng để bị lộ.' },
-    { who: 'ti', face: 'happy', text: 'Rõ, thưa thủ trưởng. Nhiệm vụ này em nhận!' },
-  ], () => {
-    G.cut = 'card';
-    showScreen(`<div class="card"><h1>KHU TỰ TRỊ</h1><p>Bavet, Campuchia · Ngày đầu tiên của "nhân viên mới"</p></div>`);
-    setTimeout(() => {
-      hideScreen(); G.cut = null; ui.hud.classList.remove('hidden'); bgm('calm');
-      dialog([
-        { who: 'dai', text: 'Thằng mới đấy à? Nhìn cái mặt ngơ ngơ.' },
-        { who: 'dai', text: 'Mày ngồi ở máy 4, lo mà làm đi. Còn không đừng có mơ mà thoát khỏi đây.' },
-        { who: 'ti', face: 'shock', text: 'D-dạ... em làm ngay, đại ca!' },
-        { who: 'dai', text: 'KPI tháng này 20 tỷ. Thiếu một đồng là biết tay tao.' },
-        { who: 'think', face: 'angry', text: 'Hắn đi tuần liên tục. Mình phải tìm thông tin của An Yên mà không để hắn nghi ngờ.' },
-        { who: 'sys', text: 'Di chuyển: ← → hoặc A D · Tương tác: E / Space (hoặc click vào đồ vật) · Gợi ý: H' },
-        { who: 'sys', text: 'Khi Anh Đại ở cùng phòng, hãy về đứng ở bàn PC04 để giả vờ làm việc. Bị hắn bắt gặp đang rình mò thì Mức nghi ngờ sẽ tăng.' },
-      ], () => { D.state = 'walkOut'; D.goal = -60; });
-    }, 2600);
-  });
-}
-
-/* ---------------- Objective & hints ---------------- */
-function objective() {
-  const n = LETTERS.filter(has).length;
-  if (G.flags.rescued) return 'Đưa An Yên ra ngoài!';
-  if (has('key')) return 'Tới khu giam, mở buồng PK5 giải cứu An Yên!';
-  if (G.flags.gate) return G.flags.yenHint ? 'Lấy chìa khóa trên đầu hươu trong phòng Anh Đại' : 'Tìm buồng PK5 trong khu giam và tìm chìa khóa';
-  if (G.flags.folder) return `Tìm ký tự màu xanh để mở cửa khu giam (${n}/4)`;
-  if (has('note')) return 'Mở folder hồ sơ trên máy PC04';
-  return 'Ngồi vào máy PC04 theo lệnh Anh Đại';
-}
-function hint() {
-  let t;
-  if (has('key')) t = 'Vào khu giam qua cửa sắt "CELL" ở Hành lang A, đến buồng PK5 và dùng chìa khóa.';
-  else if (G.flags.gate) t = 'Chìa khóa buồng giam móc trên đầu hươu trong phòng Anh Đại (cửa xanh ở Hành lang B). Lẻn vào khi hắn đi tuần ở phòng khác. Máy tính của hắn còn có bằng chứng.';
-  else if (G.flags.folder) {
-    const where = { c2: ['hallA', 'số trên cốc giấy ở máy lọc nước'], c4: ['office', 'số trên đồng hồ treo tường'], cK: ['hallA', 'chữ trên bảng KPI'], c20: ['hallB', 'tờ giấy trong thùng rác'] };
-    const ROUTE_TO = {
-      office: { office: 'ngay trong phòng này', hallA: 'đi sang TRÁI ra Hành lang A', hallB: 'đi sang TRÁI ra Hành lang A, rồi đi tiếp sang TRÁI tới Hành lang B' },
-      hallA: { office: 'đi sang PHẢI về Phòng làm việc', hallA: 'ngay trong hành lang này', hallB: 'đi sang TRÁI tới Hành lang B' },
-      hallB: { office: 'đi sang PHẢI ra Hành lang A, rồi đi tiếp sang PHẢI về Phòng làm việc', hallA: 'đi sang PHẢI ra Hành lang A', hallB: 'ngay trong hành lang này' },
-      boss: { office: 'ra Hành lang B, rồi đi sang PHẢI 2 lần', hallA: 'ra Hành lang B, rồi đi sang PHẢI', hallB: 'ra khỏi phòng này' },
-      cells: { office: 'ra Hành lang A, rồi đi sang PHẢI', hallA: 'ra khỏi khu giam', hallB: 'ra Hành lang A, rồi đi sang TRÁI' },
-    };
-    const miss = LETTERS.filter(c => !has(c));
-    t = miss.length
-      ? `Đã có ${4 - miss.length}/4 ký tự. Còn thiếu: ` + miss.map(c => `${where[c][1]} (${ROUTE_TO[G.room][where[c][0]]})`).join('; ') + '.'
-      : 'Đủ rồi! Ra Hành lang A, nhập 2 4 K 20 vào bàn phím cạnh cửa CELL (thứ tự theo hình: cốc, đồng hồ, KPI, thùng rác).';
-  } else if (has('note')) t = 'Mở máy PC04, vào folder Ho_so_nhan_su, nhập mật khẩu của PC04 ghi trên Giấy bàn giao máy.';
-  else t = 'Trên bàn làm việc, giữa máy 03 và 04, có một tờ giấy.';
-  dialog([{ who: 'think', face: 'angry', text: t }]);
-}
-
-/* ---------------- Input ---------------- */
-const keys = {};
-addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
-  const k = e.key;
-  if (G.dlg) {
-    if (k === 'e' || k === 'E' || k === ' ' || k === 'Enter') { e.preventDefault(); nextLine(); }
-    if (k === 'Escape') skipDialog();
-    return;
-  }
-  if (G.overlay) {
-    if (k === 'Escape') closeOverlay();
-    else if (ui.panel._key) ui.panel._key(e);
-    return;
-  }
-  if (G.mode !== 'play' || G.cut) return;
-  if (k === 'Escape' || k === 'p' || k === 'P') { G.paused ? resume() : showPause(); return; }
-  if (G.paused) return;
-  keys[k.toLowerCase()] = true;
-  if (k === 'e' || k === 'E' || k === ' ' || k === 'Enter') { e.preventDefault(); const s = activeSpot(); if (s) interact(s); }
-  if (k === 'h' || k === 'H') hint();
-  if (k.startsWith('Arrow')) e.preventDefault();
-});
-addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
-
-cv.addEventListener('pointerdown', e => {
-  ac();
-  if (G.dlg) { nextLine(); return; }
-  if (G.mode !== 'play' || G.cut || G.paused || G.overlay || G.trans) return;
-  const r = cv.getBoundingClientRect();
-  const x = (e.clientX - r.left) / SCALE, y = (e.clientY - r.top) / SCALE;
-  const R = ROOMS[G.room];
-  const s = R.spots.find(s => x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h);
-  if (s) { P.target = s.ix; P.after = s; return; }
-  P.after = null;
-  if (x < 60 && R.exits.left) P.target = -40;
-  else if (x > W - 60 && R.exits.right) P.target = W + 40;
-  else if (y > 380) P.target = clamp(x, 40, W - 40);
-});
-$('#btn-hint').onclick = () => { if (!G.dlg && !G.overlay && !G.paused) hint(); };
-$('#btn-pause').onclick = () => { if (!G.dlg && !G.overlay) G.paused ? resume() : showPause(); };
-
-function label(s) { return typeof s.label === 'function' ? s.label() : s.label; }
-function activeSpot() {
-  let best = null, bd = 80;
-  for (const s of ROOMS[G.room].spots) { const d = Math.abs(P.x - s.ix); if (d < bd) { bd = d; best = s; } }
-  return best;
-}
-function interact(s) { if (G.overlay || G.dlg) return; P.dir = Math.sign(s.ix - P.x) || P.dir; s.act(); }
-
-/* ---------------- Update ---------------- */
-const SPEED = 290;
-function updPlayer(dt) {
-  const R = ROOMS[G.room];
-  let vx = 0;
-  if (!G.overlay) {
-    if (keys['arrowleft'] || keys['a']) vx = -1;
-    if (keys['arrowright'] || keys['d']) vx = 1;
-  }
-  if (vx) { P.target = null; P.after = null; }
-  else if (P.target != null && !G.overlay) {
-    const d = P.target - P.x;
-    if (Math.abs(d) < 6) {
-      P.x = clamp(P.target, -60, W + 60); P.target = null;
-      if (P.after) { const s = P.after; P.after = null; interact(s); }
-    } else vx = Math.sign(d);
-  }
-  P.moving = !!vx;
-  if (vx) {
-    P.dir = vx; P.x += vx * SPEED * dt; P.walkT += dt;
-    P.stepT -= dt; if (P.stepT <= 0) { P.stepT = 0.32; SFX.step(); }
-  }
-  if (P.x <= 40) {
-    if (R.exits.left && (vx < 0 || P.target == null)) { const e = R.exits.left; return go(e.to, e.x, e.dir); }
-    P.x = 40;
-  }
-  if (P.x >= W - 40) {
-    if (R.exits.right && (vx > 0 || P.target == null)) { const e = R.exits.right; return go(e.to, e.x, e.dir); }
-    P.x = W - 40;
-  }
-}
-function daiSay(t) { D.say = t; D.sayT = 2.4; }
+/* ---------------- Anh Đại patrol ---------------- */
+function nextArea() { return ROUTE[(D.idx + 1) % ROUTE.length]; }
 function updDai(dt) {
-  if (D.sayT > 0) D.sayT -= dt;
-  if (D.state === 'hold') return;
-  const spd = G.alarm ? 210 : 125;
-  const step = (goal, s = spd) => {
-    const d = goal - D.x;
-    if (Math.abs(d) < 4) { D.x = goal; D.moving = false; return true; }
-    D.dir = Math.sign(d); D.x += D.dir * Math.min(Math.abs(d), s * dt); D.moving = true; D.walkT += dt; return false;
-  };
-  // chase when very suspicious
-  if (D.room === G.room && G.det > 62 && G.room !== 'cells') {
-    if (!D.chasing) { D.chasing = true; daiSay('ĐỨNG LẠI ĐÓ!'); }
-    if (Math.abs(P.x - D.x) > 110) step(P.x, spd * 1.35); else { D.moving = false; D.dir = Math.sign(P.x - D.x) || D.dir; }
-    return;
+  const here = AREA[G.view];
+  D.t -= dt * (G.alarm ? 1.8 : 1);
+  if (!D.warned && D.t < 4 && nextArea() === here && D.area !== here) {
+    D.warned = true; SFX.heart();
+    ui.warn.textContent = `Có tiếng bước chân đang tới ${AREA_NAME[here]}...`;
   }
-  if (D.chasing) { D.chasing = false; D.state = 'linger'; D.timer = 2; }
-  if (D.state === 'walkIn') {
-    if (step(D.goal)) { D.state = 'linger'; D.timer = DWELL[D.room] * (G.alarm ? 0.5 : 1) * rnd(0.8, 1.25); D.look = rnd(1, 2); }
-  } else if (D.state === 'linger') {
-    D.moving = false; D.timer -= dt; D.look -= dt;
-    if (D.look <= 0) { D.dir *= -1; D.look = rnd(1.2, 2.6); }
-    if (D.timer <= 0) { D.state = 'walkOut'; D.goal = DOORX[D.room][ROUTE[(D.ri + 1) % ROUTE.length]]; }
-  } else if (D.state === 'walkOut') {
-    if (step(D.goal)) {
-      const prev = D.room; D.ri = (D.ri + 1) % ROUTE.length; D.room = ROUTE[D.ri];
-      D.x = DOORX[D.room][prev]; D.state = 'walkIn';
-      D.goal = D.room === 'office' ? rnd(480, 900) : D.room === 'boss' ? rnd(500, 1000) : rnd(250, 1000);
-      if (D.room === G.room) {
-        G.grace = Math.max(G.grace, 0.8); SFX.heart();
-        daiSay(pick(['KPI đâu hết rồi?!', 'Làm việc đi, nhìn cái gì!', 'Tao đang để mắt tới tụi bây đấy.', 'Đứa nào lười là ăn điện!']));
-        if (prev === 'boss' || D.room === 'boss') SFX.door();
-      }
-    }
+  if (D.t <= 0) {
+    D.idx = (D.idx + 1) % ROUTE.length; D.area = ROUTE[D.idx]; D.t = STAY[D.area]; D.warned = false; D.greeted = false;
+    if (D.area === here) { G.grace = Math.max(G.grace, 1.2); SFX.heart(); }
   }
-}
-function seen() {
-  if (D.room !== G.room || G.room === 'cells') return false;
-  if (D.x < -20 || D.x > W + 20) return false;
-  const dx = P.x - D.x, ad = Math.abs(dx);
-  if (ad < 170) return true;
-  return Math.sign(dx) === D.dir && ad < 780;
-}
-function atDesk() { return G.room === 'office' && P.x > 925 && P.x < 1075; }
-function suspicion() {
-  const o = G.overlay;
-  if (atDesk() && (!o || o === 'computer')) return -45;
-  if (o) return 60;
-  if (G.room === 'boss') return 70;
-  if (has('key') && !G.flags.rescued) return 38;
-  return P.moving ? 15 : 8;
 }
 function updDetect(dt) {
   if (G.grace > 0) G.grace -= dt;
-  const s = seen(); G.seen = s;
-  if (s && G.grace <= 0) {
-    const r = suspicion();
+  const here = AREA[G.view];
+  const present = D.area === here && here !== 'cells';
+  if (present && G.grace <= 0) {
+    let r = SAFE.has(G.view) ? -40 : here === 'boss' ? 55 : 24;
+    if (r > 0 && G.overlay && G.overlay !== 'pc') r += 15;
+    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('Anh Đại: "Ừ, làm vậy mới ngoan."'); }
     G.det = clamp(G.det + r * dt, 0, 100);
-    if (r > 0 && G.det > 35 && D.sayT <= 0 && !D.chasing) daiSay('Ê... thằng kia?');
-  } else G.det = Math.max(0, G.det - 12 * dt);
-  if (G.det >= 100) caught();
-  // heartbeat when danger is near
+  } else G.det = Math.max(0, G.det - 15 * dt);
   G.hbT -= dt;
-  const near = D.room === G.room || (ADJ[G.room] || []).includes(D.room);
-  if (near && G.hbT <= 0) { G.hbT = D.room === G.room ? (0.9 - G.det / 200) : 1.4; if (D.room === G.room || Math.random() < 0.5) SFX.heart(); }
+  if (present && G.hbT <= 0) { G.hbT = 0.9 - G.det / 220; SFX.heart(); }
+  if (G.det >= 100) caught();
 }
-function update(dt) {
-  G.t += dt;
-  if (G.mode !== 'play' || G.dlg || G.paused || G.cut) return;
-  G.elapsed += dt;
-  if (!G.trans) updPlayer(dt);
-  updDai(dt);
-  if (!G.trans) updDetect(dt);
-  if (G.alarm && !G.dlg) {
-    G.countdown -= dt;
-    if (G.countdown <= 0) { G.countdown = 0; caught('time'); }
-  }
+function caught(reason) {
+  G.det = 0; closeOverlay(true); ui.warn.classList.remove('on');
+  ui.flash.classList.remove('zap'); void ui.flash.offsetWidth; ui.flash.classList.add('zap');
+  dialog([L.caught], () => playVideo('cut2', () => {
+    G.lives--; G.caught++;
+    if (G.lives <= 0) return dialog([L.gameover], gameOver);
+    if (has('key') && !G.flags.rescued) { G.inv.delete('key'); G.alarm = false; bgm('calm'); renderInv(); toast('Ông trùm đã lấy lại chùm chìa khóa.'); }
+    dialog([L.afterzap], () => {
+      G.view = 'desk'; G.grace = 2;
+      Object.assign(D, { area: 'office', idx: 2, t: 2.5, warned: false, greeted: true });
+    });
+  }));
 }
 
-/* ---------------- Render ---------------- */
-function drawChar(img, x, floor, h, flip, bob = 0, tilt = 0) {
-  if (!img) return;
-  const s = h / img.height, w = img.width * s;
-  ctx.save(); ctx.translate(x, floor);
-  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(0, 0, w * 0.42, 12, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.translate(0, bob); ctx.rotate(tilt);
-  if (flip) ctx.scale(-1, 1);
-  ctx.drawImage(img, -w / 2, -h, w, h);
+/* ---------------- Screens built from the group's UI art ---------------- */
+const ib = (id, img, cx, cy, w, h, hw, hh) =>
+  `<button class="ib" id="${id}" style="left:${cx - Math.max(w, hw || w) / 2}px;top:${cy - Math.max(h, hh || h) / 2}px;width:${Math.max(w, hw || w)}px;height:${Math.max(h, hh || h)}px">
+    <img class="n" src="${A('ui/' + img + '.png')}" style="position:absolute;left:${(Math.max(w, hw || w) - w) / 2}px;top:${(Math.max(h, hh || h) - h) / 2}px;width:${w}px;height:${h}px" alt="">
+    <img class="h" src="${A('ui/' + img + '_h.png')}" style="position:absolute;left:${(Math.max(w, hw || w) - (hw || w)) / 2}px;top:${(Math.max(h, hh || h) - (hh || h)) / 2}px;width:${hw || w}px;height:${hh || h}px" alt=""></button>`;
+function showScreen(html, mount) { ui.screen.innerHTML = html; ui.screen.classList.remove('hidden'); ui.tip.classList.remove('on'); if (mount) mount(ui.screen); ui.screen.querySelectorAll('.ib').forEach(b => b.addEventListener('click', () => SFX.click())); }
+function hideScreen() { ui.screen.classList.add('hidden'); ui.screen.innerHTML = ''; }
+const inGame = () => G.mode === 'play';
+const panelBg = () => inGame() ? '<div class="dim"></div>' : `<img class="bg" src="${A('ui/opt_bg.jpg')}" alt="">`;
+
+function showMenu() {
+  G.mode = 'menu'; G.paused = false; G.dlg = null; stopVoice(); closeOverlay(true);
+  ui.dialog.classList.add('hidden'); ui.hud.classList.add('hidden');
+  bgm('menu');
+  showScreen(`<img class="bg" src="${A('ui/menu_bg.jpg')}" alt="">
+    <img class="abs" src="${A('ui/logo.png')}" style="left:213px;top:207px;width:667px;height:499px" alt="Cuộc Gọi Từ Campuchia">
+    ${ib('m-start', 'start', 526, 823, 276, 250)}${ib('m-opt', 'option', 722, 808, 276, 250)}`,
+  s => {
+    s.querySelector('#m-start').onclick = () => { ac(); startGame(); };
+    s.querySelector('#m-opt').onclick = () => { ac(); showOptions(showMenu); };
+  });
+}
+function showOptions(back) {
+  showScreen(`${panelBg()}<img class="bg" src="${A('ui/opt_panel.webp')}" alt="">
+    ${ib('o-sound', 'opt_sound', 947, 530, 169, 74, 256, 128)}${ib('o-tut', 'opt_tut', 958, 640, 253, 75, 256, 128)}
+    ${ib('o-quit', 'opt_quit', 962, 758, 286, 85, 367, 128)}${ib('o-back', 'back', 959, 873, 82, 42, 128, 64)}`,
+  s => {
+    s.querySelector('#o-sound').onclick = () => showSound(() => showOptions(back));
+    s.querySelector('#o-tut').onclick = () => showTutorial(() => showOptions(back));
+    s.querySelector('#o-quit').onclick = () => showQuit(() => showOptions(back));
+    s.querySelector('#o-back').onclick = back;
+  });
+}
+function showSound(back) {
+  const row = (key, y) => `
+    <button class="ib" data-full="${key}" style="left:706px;top:${y - 36}px;width:91px;height:71px"><img class="n" src="${A('ui/snd_on.png')}" alt=""><img class="h" src="${A('ui/snd_on.png')}" style="filter:brightness(1.6)" alt=""></button>
+    <div class="slider" data-s="${key}" style="left:823px;top:${y - 20}px;width:425px">
+      <img class="trk" src="${A('ui/snd_track.png')}" alt=""><div class="fil"><img src="${A('ui/snd_fill.png')}" alt=""></div><img class="knob" src="${A('ui/snd_knob.png')}" alt=""></div>
+    <button class="ib" data-mute="${key}" style="left:1264px;top:${y - 45}px;width:74px;height:90px"><img class="n" src="${A('ui/snd_off.png')}" alt=""><img class="h" src="${A('ui/snd_off.png')}" style="filter:brightness(1.6)" alt=""></button>`;
+  showScreen(`${panelBg()}<img class="bg" src="${A('ui/snd_panel.webp')}" alt="">${row('music', 571)}${row('sfx', 724)}${ib('s-back', 'back', 959, 873, 82, 42, 128, 64)}`, s => {
+    const paint = () => s.querySelectorAll('.slider').forEach(sl => {
+      const v = SET[sl.dataset.s]; sl.querySelector('.fil').style.width = (v * 425) + 'px'; sl.querySelector('.knob').style.left = (v * 425) + 'px';
+    });
+    s.querySelectorAll('.slider').forEach(sl => {
+      const setFrom = e => { const p = toStage(e); SET[sl.dataset.s] = clamp((p.x - 823) / 425, 0, 1); paint(); saveSet(); };
+      sl.addEventListener('pointerdown', e => { sl.setPointerCapture(e.pointerId); setFrom(e); sl.onpointermove = setFrom; });
+      sl.addEventListener('pointerup', () => { sl.onpointermove = null; SFX.click(); });
+    });
+    s.querySelectorAll('[data-full]').forEach(b => b.onclick = () => { SET[b.dataset.full] = 1; paint(); saveSet(); });
+    s.querySelectorAll('[data-mute]').forEach(b => b.onclick = () => { SET[b.dataset.mute] = 0; paint(); saveSet(); });
+    s.querySelector('#s-back').onclick = back;
+    paint();
+  });
+}
+function showTutorial(back) {
+  showScreen(`${panelBg()}<img class="bg" src="${A('ui/tut_panel.webp')}" alt="">
+    <div class="tut-note">Mũi tên đỏ / phím ← → ↓: đổi góc nhìn · H: gợi ý · Esc: tạm dừng<br>Anh Đại đi tuần: nghe tiếng bước chân thì về <b>bàn máy số 4</b> ngồi!</div>
+    ${ib('t-back', 'back', 959, 873, 82, 42, 128, 64)}`, s => { s.querySelector('#t-back').onclick = back; });
+}
+function showQuit(back) {
+  showScreen(`${panelBg()}<img class="bg" src="${A('ui/quit_panel.webp')}" alt="">${ib('q-yes', 'yes', 783, 646, 90, 78)}${ib('q-no', 'no', 1112, 642, 73, 84)}`, s => {
+    s.querySelector('#q-yes').onclick = () => { if (inGame()) showMenu(); else { showMenu(); toast('Hẹn gặp lại!'); } };
+    s.querySelector('#q-no').onclick = back;
+  });
+}
+function showPause() {
+  if (G.mode !== 'play' || G.dlg || G.video) return;
+  G.paused = true; closeOverlay(true);
+  showScreen(`<div class="dim"></div><img class="bg" src="${A('ui/pause_panel.webp')}" alt="">
+    ${ib('p-home', 'p_home', 640, 655, 143, 205)}${ib('p-opt', 'p_opt', 956, 657, 210, 204)}${ib('p-play', 'p_play', 1259, 654, 125, 197)}`, s => {
+    s.querySelector('#p-home').onclick = () => showQuit(showPause);
+    s.querySelector('#p-opt').onclick = () => showOptions(showPause);
+    s.querySelector('#p-play').onclick = resume;
+  });
+}
+function resume() { G.paused = false; hideScreen(); }
+function endScreen() {
+  G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu');
+  showScreen(`<img class="bg" src="${A('ui/end_bg.jpg')}" alt="">
+    <img class="abs" src="${A('ui/end_title.png')}" style="left:201px;top:298px;width:701px;height:295px" alt="The End">
+    ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 735, 835, 208, 200)}
+    <div class="end-note">Cảnh giác với lời mời "việc nhẹ lương cao" ở nước ngoài. Có nghi vấn, báo ngay cho công an (113).</div>`, s => {
+    s.querySelector('#e-restart').onclick = startGame;
+    s.querySelector('#e-quit').onclick = showMenu;
+  });
+}
+function gameOver() {
+  G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu');
+  showScreen(`<img class="bg" src="${A('ui/end_bg.jpg')}" alt=""><div class="over-title">BỊ LỘ RỒI!</div>
+    ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 735, 835, 208, 200)}`, s => {
+    s.querySelector('#e-restart').onclick = startGame;
+    s.querySelector('#e-quit').onclick = showMenu;
+  });
+}
+
+/* ---------------- Flow ---------------- */
+function startGame() {
+  hideScreen(); newGame(); renderInv(); bgm(null);
+  playVideo('cut1', () => {
+    G.mode = 'play'; G.view = 'office'; ui.hud.classList.remove('hidden'); bgm('calm');
+    dialog([L.intro], () => {
+      toast('Click vào đồ vật để tương tác · Mũi tên đỏ để đổi góc nhìn · Space: bỏ qua thoại', 5000);
+      D.t = 3; G.grace = 4;
+    });
+  });
+}
+function objective() {
+  const n = LETTERS.filter(has).length;
+  if (has('key')) return 'Giải cứu An Yên ở phòng 602!';
+  if (G.flags.gate) return 'Tìm chìa khóa phòng giam';
+  if (G.flags.folder) return `Tìm 4 ký tự để mở cửa phòng giam (${n}/4)`;
+  return 'Mở hồ sơ trong máy số 4';
+}
+function hint() {
+  let t;
+  if (has('key')) t = 'Ra cửa CELL ở hành lang, vào phòng giam và mở phòng 602.';
+  else if (G.flags.gate) t = 'Chìa khóa treo ở đầu nai trong phòng ông trùm (cửa gỗ cạnh bảng KPI). Vào lúc hắn đi tuần chỗ khác.';
+  else if (G.flags.folder) {
+    const where = { cup: 'cái ly ở máy lọc nước (hành lang)', clock: 'đồng hồ (góc phòng làm việc)', k: 'bảng KPI (hành lang)', paper: 'thùng rác (góc phòng làm việc)' };
+    const miss = LETTERS.filter(c => !has(c)).map(c => where[c]);
+    t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Nhập 2 4 K 20 vào bàn phím cạnh cửa CELL.';
+  } else if (has('note')) t = 'Bấm vào màn hình máy số 4, mở folder Ho_so_nhan_su, nhập mật khẩu trên cuốn sổ.';
+  else t = 'Tới bàn máy số 4, xem cuốn sổ có tờ giấy nhớ.';
+  toast('💡 ' + t, 5000);
+}
+
+/* ---------------- Input ---------------- */
+function arrowRects() {
+  const a = VIEWS[G.view].arrows, r = [];
+  if (a.down) r.push({ dir: 'down', to: a.down, x: 900, y: 940, w: 120, h: 120 });
+  if (a.left) r.push({ dir: 'left', to: a.left, x: 20, y: 480, w: 120, h: 120 });
+  if (a.right) r.push({ dir: 'right', to: a.right, x: 1780, y: 480, w: 120, h: 120 });
+  return r;
+}
+const inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+const canInteract = () => G.mode === 'play' && !G.dlg && !G.paused && !G.video && !G.busy && !G.overlay;
+cv.addEventListener('pointermove', e => {
+  if (!canInteract()) { G.hover = G.hoverArrow = null; cv.style.cursor = 'default'; ui.tip.classList.remove('on'); return; }
+  const p = toStage(e);
+  G.hoverArrow = arrowRects().find(r => inRect(p, r)) || null;
+  G.hover = G.hoverArrow ? null : spotsOf(G.view).find(s => inRect(p, s)) || null;
+  cv.style.cursor = (G.hover || G.hoverArrow) ? 'pointer' : 'default';
+  if (G.hover) { ui.tip.textContent = lbl(G.hover); ui.tip.style.left = Math.min(p.x + 24, W - 420) + 'px'; ui.tip.style.top = (p.y + 24) + 'px'; ui.tip.classList.add('on'); }
+  else ui.tip.classList.remove('on');
+});
+cv.addEventListener('pointerdown', e => {
+  ac();
+  if (G.dlg) { nextLine(); return; }
+  if (!canInteract()) return;
+  const p = toStage(e);
+  const a = arrowRects().find(r => inRect(p, r));
+  if (a) { go(a.to); return; }
+  const s = spotsOf(G.view).find(s => inRect(p, s));
+  if (!s) return;
+  ui.tip.classList.remove('on');
+  if (s.go) go(s.go, s.sfx); else s.act();
+});
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (G.video && (e.key === ' ' || e.key === 'Escape' || e.key === 'Enter')) { e.preventDefault(); G.skipVideo && G.skipVideo(); return; }
+  if (G.dlg) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); nextLine(); } return; }
+  if (G.overlay) {
+    if (e.key === 'Escape') closeOverlay();
+    else if (G.overlay === 'keypad' && G.keypad) G.keypad(e);
+    return;
+  }
+  if (G.mode !== 'play') return;
+  if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { G.paused ? resume() : showPause(); return; }
+  if (G.paused || G.busy) return;
+  const a = VIEWS[G.view].arrows;
+  if (e.key === 'ArrowDown' && a.down) { e.preventDefault(); go(a.down); }
+  if (e.key === 'ArrowLeft' && a.left) { e.preventDefault(); go(a.left); }
+  if (e.key === 'ArrowRight' && a.right) { e.preventDefault(); go(a.right); }
+  if (e.key === 'h' || e.key === 'H') hint();
+});
+$('#btn-pause').onclick = () => { ac(); SFX.click(); showPause(); };
+$('#btn-hint').onclick = () => { if (canInteract()) hint(); };
+
+/* ---------------- Update & render ---------------- */
+function update(dt) {
+  G.t += dt;
+  if (G.mode !== 'play' || G.dlg || G.paused || G.video) return;
+  updDai(dt);
+  updDetect(dt);
+  if (G.alarm) { G.countdown -= dt; if (G.countdown <= 0) { G.countdown = 0; G.alarm = false; caught(); } }
+}
+function drawArrow(r, hover) {
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2, s = hover ? 1.15 : 1, bob = Math.sin(G.t * 5) * 6;
+  ctx.save(); ctx.translate(cx + (r.dir === 'left' ? -bob : r.dir === 'right' ? bob : 0), cy + (r.dir === 'down' ? bob : 0));
+  ctx.rotate(r.dir === 'down' ? Math.PI / 2 : r.dir === 'left' ? Math.PI : 0); ctx.scale(s, s);
+  ctx.beginPath(); ctx.moveTo(-46, -18); ctx.lineTo(8, -18); ctx.lineTo(8, -44); ctx.lineTo(52, 0); ctx.lineTo(8, 44); ctx.lineTo(8, 18); ctx.lineTo(-46, 18); ctx.closePath();
+  const g = ctx.createLinearGradient(-46, 0, 52, 0); g.addColorStop(0, '#e46a3c'); g.addColorStop(1, '#d6332a');
+  ctx.fillStyle = g; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5; ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
   ctx.restore();
-}
-function bubble(x, y, text, color = '#fff', tc = '#111') {
-  ctx.font = '800 20px "Be Vietnam Pro", sans-serif';
-  const w = ctx.measureText(text).width + 26, h = 38;
-  ctx.fillStyle = color; ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.roundRect(x - w / 2, y - h, w, h, 8); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x - 8, y - 1); ctx.lineTo(x, y + 12); ctx.lineTo(x + 8, y - 1); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = tc; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y - h / 2 + 1);
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-}
-function drawCells() {
-  ctx.fillStyle = '#3a3f47'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#272b31'; ctx.fillRect(0, 0, W, 95);
-  ctx.strokeStyle = '#111'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 95); ctx.lineTo(W, 95); ctx.stroke();
-  for (const lx of [260, 640, 1020]) {
-    const g = ctx.createRadialGradient(lx, 100, 10, lx, 300, 420);
-    g.addColorStop(0, 'rgba(255,230,160,.35)'); g.addColorStop(1, 'rgba(255,230,160,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 95, W, 600);
-    ctx.fillStyle = '#ffe9a8'; ctx.fillRect(lx - 40, 95, 80, 10); ctx.strokeRect(lx - 40, 95, 80, 10);
-  }
-  const fg = ctx.createLinearGradient(0, 575, 0, H); fg.addColorStop(0, '#5a5d61'); fg.addColorStop(1, '#3a3c40');
-  ctx.fillStyle = fg; ctx.fillRect(0, 575, W, H - 575);
-  ctx.strokeStyle = '#111'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 575); ctx.lineTo(W, 575); ctx.stroke();
-  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.35)';
-  for (let x = -200; x < W + 200; x += 120) { ctx.beginPath(); ctx.moveTo(640 + (x - 640) * 0.6, 575); ctx.lineTo(x, H); ctx.stroke(); }
-  for (let i = 0; i < 6; i++) {
-    const x = CELL_X(i), y = 185, w = 170, h = 390, n = i + 1;
-    ctx.fillStyle = '#1b1d22'; ctx.fillRect(x, y, w, h);
-    ctx.fillStyle = '#2a2d33'; ctx.fillRect(x + 10, y + 10, w - 20, h - 80);
-    ctx.fillStyle = '#4a3a2c'; ctx.fillRect(x + 14, y + h - 90, w - 28, 18);
-    if (n === 1 || n === 3) {
-      ctx.fillStyle = '#0d0e11';
-      ctx.beginPath(); ctx.arc(x + 60, y + h - 150, 20, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(x + 64, y + h - 100, 36, 46, 0, 0, Math.PI * 2); ctx.fill();
-    }
-    if (n === 5 && !G.flags.rescued) drawChar(IMG.anyen, x + w / 2, y + h - 8, 300, false, Math.sin(G.t * 2) * 1.5);
-    const open = n === 5 && G.flags.rescued;
-    ctx.fillStyle = '#8a8f96'; ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
-    for (let b = 0; b < 8; b++) {
-      const bx = x + 10 + b * 21 + (open ? 120 : 0);
-      if (bx > x + w + 100) continue;
-      ctx.fillRect(bx, y, 8, h); ctx.strokeRect(bx, y, 8, h);
-    }
-    ctx.fillRect(x, y + 120, w, 10); ctx.strokeRect(x, y + 120, w, 10);
-    ctx.lineWidth = 6; ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = n === 5 ? '#f2c230' : '#d9d2c0'; ctx.lineWidth = 3;
-    ctx.fillRect(x + w / 2 - 38, y - 44, 76, 34); ctx.strokeRect(x + w / 2 - 38, y - 44, 76, 34);
-    ctx.fillStyle = '#111'; ctx.font = '30px VT323, monospace'; ctx.textAlign = 'center'; ctx.fillText('PK' + n, x + w / 2, y - 18); ctx.textAlign = 'left';
-  }
-}
-function drawCut() {
-  if (G.cut === 'call') {
-    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1426'); g.addColorStop(1, '#1d2a44');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#122039'; ctx.fillRect(140, 90, 360, 260); ctx.strokeStyle = '#111'; ctx.lineWidth = 8; ctx.strokeRect(140, 90, 360, 260);
-    ctx.beginPath(); ctx.moveTo(320, 90); ctx.lineTo(320, 350); ctx.moveTo(140, 220); ctx.lineTo(500, 220); ctx.stroke();
-    ctx.fillStyle = '#f5f1d0'; ctx.beginPath(); ctx.arc(430, 150, 28, 0, Math.PI * 2); ctx.fill();
-    for (let i = 0; i < 40; i++) { ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillRect(150 + (i * 97) % 340, 100 + (i * 53) % 240, 2, 2); }
-    drawChar(IMG.ti_phone, 860, 760, 700, false, Math.sin(G.t * 1.5) * 2);
-    const r = (G.t * 3) % 1;
-    ctx.strokeStyle = `rgba(242,194,48,${1 - r})`; ctx.lineWidth = 4;
-    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(905, 150, 30 + k * 18 + r * 18, -0.9, 0.6); ctx.stroke(); }
-  } else if (G.cut === 'end') {
-    ctx.fillStyle = '#0d1018'; ctx.fillRect(0, 0, W, H);
-    drawChar(IMG.ti_pose2, 420, 700, 560, false);
-    drawChar(IMG.anhdai, 880, 700, 560, false);
-  } else { ctx.fillStyle = '#05070b'; ctx.fillRect(0, 0, W, H); }
 }
 function render() {
   ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.imageSmoothingQuality = 'high';
-  ctx.clearRect(0, 0, W, H);
-  if (G.mode === 'menu') { if (IMG.bg_menu) ctx.drawImage(IMG.bg_menu, 0, 0, W, H); return; }
-  if (G.cut) { drawCut(); return; }
-  const R = ROOMS[G.room];
-  if (R.bg && IMG[R.bg]) ctx.drawImage(IMG[R.bg], 0, 0, W, H); else drawCells();
-  for (const s of R.spots) if (s.draw) s.draw();
-
-  // active hotspot highlight
-  const act = (G.mode === 'play' && !G.dlg && !G.overlay) ? activeSpot() : null;
-  if (act) {
-    const p = 0.5 + 0.5 * Math.sin(G.t * 6);
-    ctx.save(); ctx.strokeStyle = `rgba(242,194,48,${0.6 + 0.4 * p})`; ctx.lineWidth = 4; ctx.setLineDash([10, 6]);
-    ctx.strokeRect(act.x - 4, act.y - 4, act.w + 8, act.h + 8); ctx.restore();
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  if (G.mode !== 'play' && G.mode !== 'end') return;
+  const v = VIEWS[G.view], img = IMG[G.view];
+  if (img) ctx.drawImage(img, 0, 0, W, H);
+  if (v.draw) v.draw();
+  // Anh Đại standing in the wide views of the area he is patrolling
+  if (v.dai && D.area === AREA[G.view] && IMG.dai) {
+    const d = IMG.dai, h = v.dai.h, w = d.width * h / d.height;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 30; ctx.drawImage(d, v.dai.x - w / 2, H - h + 40, w, h); ctx.restore();
   }
-
-  // characters
-  const daiImg = IMG.anhdai;
-  const drawD = () => {
-    if (D.room !== G.room) return;
-    const bob = D.moving ? -Math.abs(Math.sin(D.walkT * 7)) * 6 : 0;
-    drawChar(daiImg, D.x, R.floor + 6, R.h * 1.04, D.dir > 0, bob, D.moving ? Math.sin(D.walkT * 7) * 0.02 : 0);
-    const hy = R.floor - R.h * 1.04 - 14;
-    if (D.chasing || G.det > 70) bubble(D.x, hy, '!', '#c8342b', '#fff');
-    else if (G.seen && G.det > 35) bubble(D.x, hy, '?', '#f2c230');
-    else if (D.sayT > 0 && D.say) bubble(D.x, hy, D.say);
-  };
-  const drawP = () => {
-    let img = IMG.ti_front, flip = false;
-    if (P.moving) { img = IMG.ti_side; flip = P.dir < 0; }
-    else if (G.overlay === 'computer' && atDesk()) img = IMG.ti_back;
-    const bob = P.moving ? -Math.abs(Math.sin(P.walkT * 9)) * 7 : Math.sin(G.t * 2) * 1.2;
-    drawChar(img, P.x, R.floor, R.h, flip, bob);
-    if (has('key') && !G.flags.rescued && KEY_GREEN) ctx.drawImage(KEY_GREEN, P.x + 18, R.floor - R.h * 0.45, 26, 27);
-  };
-  if (D.x < P.x) { drawD(); drawP(); } else { drawP(); drawD(); }
-
-  // prompt
-  if (act) {
-    const t = `E · ${label(act)}`;
-    ctx.font = '600 17px "Be Vietnam Pro", sans-serif';
-    const w = ctx.measureText(t).width + 22;
-    let bx = clamp(act.x + act.w / 2 - w / 2, 8, W - w - 8), by = Math.max(act.y - 44, 120);
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.roundRect(bx, by, w, 32, 6); ctx.fill();
-    ctx.fillStyle = '#f2c230'; ctx.fillText(t, bx + 11, by + 22);
+  if (G.hover && canInteract()) {
+    const s = G.hover, p = 0.55 + 0.45 * Math.sin(G.t * 6);
+    ctx.save(); ctx.strokeStyle = `rgba(231,184,90,${p})`; ctx.lineWidth = 5; ctx.setLineDash([16, 10]); ctx.strokeRect(s.x, s.y, s.w, s.h); ctx.restore();
   }
-  // exits
-  for (const side of ['left', 'right']) {
-    const e = R.exits[side]; if (!e) continue;
-    const near = side === 'left' ? P.x < 260 : P.x > W - 260;
-    const x = side === 'left' ? 52 : W - 52, dir = side === 'left' ? -1 : 1, y = 470;
-    ctx.save(); ctx.globalAlpha = near ? 1 : 0.55 + 0.25 * Math.sin(G.t * 3);
-    ctx.translate(x + Math.sin(G.t * 6) * 5 * dir, y); ctx.scale(dir * 1.3, 1.3);
-    ctx.fillStyle = '#c8342b'; ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(-22, -12); ctx.lineTo(0, -12); ctx.lineTo(0, -24); ctx.lineTo(20, 0); ctx.lineTo(0, 24); ctx.lineTo(0, 12); ctx.lineTo(-22, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.restore();
-    ctx.font = '800 15px "Be Vietnam Pro"'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 4;
-    ctx.textAlign = side === 'left' ? 'left' : 'right';
-    const lt = side === 'left' ? '← ' + e.label : e.label + ' →';
-    ctx.strokeText(lt, side === 'left' ? 16 : W - 16, y + 56); ctx.fillText(lt, side === 'left' ? 16 : W - 16, y + 56);
-    ctx.textAlign = 'left';
-  }
-  if (G.alarm) { ctx.fillStyle = `rgba(200,30,30,${0.08 + 0.06 * Math.sin(G.t * 8)})`; ctx.fillRect(0, 0, W, H); }
+  if (G.mode === 'play' && !G.dlg) for (const r of arrowRects()) drawArrow(r, G.hoverArrow && G.hoverArrow.dir === r.dir);
+  if (G.alarm) { ctx.fillStyle = `rgba(200,30,30,${0.07 + 0.05 * Math.sin(G.t * 8)})`; ctx.fillRect(0, 0, W, H); }
 }
-
-const ROOMNAME = r => ROOMS[r].name;
 function updHUD() {
-  if (G.mode !== 'play' || G.cut) return;
+  if (G.mode !== 'play') return;
   ui.obj.textContent = objective();
-  ui.roomT.textContent = '📍 ' + ROOMNAME(G.room);
-  let cls = '', txt = '';
-  if (D.room === G.room && G.room !== 'cells') { cls = 'here'; txt = '⚠ Anh Đại đang ở đây!'; }
-  else if ((ADJ[G.room] || []).includes(D.room)) { cls = 'near'; txt = `👣 Tiếng bước chân ở ${ROOMNAME(D.room)}...`; }
-  if (atDesk() && D.room === G.room) { cls = 'safe'; txt = '🖥 Đang "làm việc" ở PC04 (an toàn)'; }
-  ui.daiT.className = cls; ui.daiT.textContent = txt;
+  ui.count.textContent = G.alarm ? '⚠ ' + fmt(G.countdown) : '';
   ui.detFill.style.width = G.det + '%';
   ui.lives.textContent = '❤️'.repeat(Math.max(0, G.lives)) + '🖤'.repeat(Math.max(0, 3 - G.lives));
-  if (G.alarm) { ui.timer.classList.add('alarm'); ui.timer.textContent = '⚠ ' + fmt(G.countdown); }
-  else { ui.timer.classList.remove('alarm'); ui.timer.textContent = fmt(G.elapsed); }
-  ui.vign.style.opacity = G.seen ? Math.min(1, G.det / 80) : (D.room === G.room ? 0.15 : 0);
+  const here = AREA[G.view];
+  const coming = D.warned && D.area !== here;
+  const present = D.area === here && here !== 'cells' && !G.dlg;
+  ui.warn.classList.toggle('on', !G.dlg && (coming || (present && !SAFE.has(G.view))));
+  if (present && !SAFE.has(G.view)) ui.warn.textContent = 'Anh Đại đang ở đây! Về bàn máy số 4!';
+  ui.vign.style.opacity = present && !SAFE.has(G.view) ? Math.min(1, 0.2 + G.det / 90) : 0;
 }
 
-/* ---------------- Main loop ---------------- */
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -1170,11 +704,9 @@ function frame(now) {
 
 (async function boot() {
   newGame(); G.mode = 'loading';
-  ctx.fillStyle = '#05070b'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#fff'; ctx.font = '28px VT323, monospace'; ctx.fillText('Đang tải...', 560, 360);
-  await loadAssets();
-  if (IMG.p_keys) KEY_GREEN = tint(IMG.p_keys, '#3fd45e');
+  await loadAssets(p => { $('#load-fill').style.width = Math.round(p * 100) + '%'; });
   try { await document.fonts.ready; } catch (e) { /* ignore */ }
+  $('#loading').remove();
   showMenu();
   requestAnimationFrame(frame);
 })();
