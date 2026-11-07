@@ -56,13 +56,15 @@ button{font-family:inherit;cursor:pointer}
 
 /* ---------- Dialogue ---------- */
 #dialog{position:absolute;inset:0;z-index:5}
-#d-fig{position:absolute;z-index:2;bottom:-40px;height:900px;pointer-events:none;filter:drop-shadow(8px 8px 0 rgba(0,0,0,.35))}
-#d-fig.left{left:30px}
-#d-fig.right{right:30px}
-/* khung thoại giữ tỉ lệ ảnh 1800x438; nhân vật đứng trước, khung lệch về phía bên kia (slide 46-50) */
+/* Nhân vật nói: to, lấy từ đầu tới đùi, đứng đè lên khung thoại (slide 46, 48, 50) */
+#d-fig{position:absolute;z-index:2;pointer-events:none;filter:drop-shadow(8px 8px 0 rgba(0,0,0,.35))}
+#d-fig.ti{height:1560px;bottom:-700px;right:20px}
+#d-fig.yen{height:1560px;bottom:-760px;right:30px}
+#d-fig.dai{height:1400px;bottom:-660px;left:-190px}
+/* khung thoại giữ tỉ lệ ảnh 1800x438; lệch về phía không có nhân vật */
 #d-box{position:absolute;z-index:1;left:160px;bottom:22px;width:1600px;height:386px;cursor:pointer}
-#dialog.fig-left #d-box{left:470px;width:1420px;height:345px}
-#dialog.fig-right #d-box{left:30px;width:1520px;height:370px}
+#dialog.fig-left #d-box{left:700px;width:1190px;height:290px}
+#dialog.fig-right #d-box{left:40px;width:1300px;height:316px}
 #d-frame{position:absolute;inset:0;width:100%;height:100%}
 #d-name{position:absolute;top:5.7%;width:23.75%;text-align:center;font-weight:800;font-size:32px;color:#fff;letter-spacing:.06em;text-shadow:2px 2px 0 rgba(0,0,0,.45)}
 #d-name.l{left:5.1%}
@@ -74,6 +76,12 @@ button{font-family:inherit;cursor:pointer}
 #overlay{position:absolute;inset:0;z-index:4;background:rgba(8,10,12,.72);display:flex;align-items:center;justify-content:center}
 #overlay.pc{background:none;display:block}
 .zoom{max-width:900px;max-height:640px;filter:drop-shadow(10px 12px 0 rgba(0,0,0,.45));margin-bottom:260px;animation:pop .25s}
+/* đồ vật phóng to nổi trên cảnh (slide 44): nền chỉ tối nhẹ, đồ vật lệch trái chừa chỗ cho Tí, ▼ đỏ để quay lại */
+#overlay.zoomwrap{background:rgba(8,10,12,.32);align-items:flex-start;justify-content:flex-start}
+#overlay.zoomwrap .zoom{position:absolute;left:690px;top:400px;transform:translate(-50%,-50%);height:540px;width:auto;max-width:860px;object-fit:contain;margin:0;animation:zpop .25s}
+@keyframes zpop{from{transform:translate(-50%,-50%) scale(.7);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.zback{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:none;border:0;color:#d6332a;font-size:54px;line-height:1;text-shadow:3px 3px 0 #1b1b1b,-2px -2px 0 #1b1b1b,2px -2px 0 #1b1b1b,-2px 2px 0 #1b1b1b;animation:bob 1s infinite}
+@keyframes bob{50%{transform:translateX(-50%) translateY(6px)}}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 .xbtn{position:absolute;right:40px;top:150px;border:4px solid var(--ink);background:var(--paper);border-radius:8px;font-weight:800;font-size:24px;padding:6px 18px}
 .shake{animation:shake .35s}

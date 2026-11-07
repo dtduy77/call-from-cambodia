@@ -163,7 +163,7 @@ const VIEWS = {
     NL('hallWater', 'Máy lọc nước', { lock: true }),
     NR('hallOffice', 'Văn phòng (máy 04)'),
   ], spots: [
-    { x: 273, y: 240, w: 196, h: 415, label: 'Máy lọc nước', go: 'hallWater', lock: true },
+    { x: 280, y: 237, w: 168, h: 215, label: 'Máy lọc nước', go: 'hallWater', lock: true }, // chỉ bình nước, không gồm kệ
     { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
     { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
@@ -282,7 +282,7 @@ function nextLine() {
   ui.dFrame.src = A(w.box);
   ui.dName.textContent = w.name; ui.dName.className = w.side;
   G.dlgWho = l.who;
-  if (w.fig) { ui.dFig.src = A(w.fig); ui.dFig.className = w.figSide; } else ui.dFig.className = 'hidden';
+  if (w.fig) { ui.dFig.src = A(w.fig); ui.dFig.className = w.figSide + ' ' + l.who; } else ui.dFig.className = 'hidden';
   ui.dialog.className = w.fig ? 'fig-' + w.figSide : '';
   typeFull = l.text; typeIdx = 0; ui.dText.textContent = '';
   playVoice(l.v);
@@ -367,8 +367,8 @@ function collect(id) {
 /* ---------------- Overlays ---------------- */
 function showZoom(src) {
   G.overlay = 'zoom';
-  ui.overlay.className = '';
-  ui.overlay.innerHTML = `<img class="zoom" src="${A(src)}" alt="">`;
+  ui.overlay.className = 'zoomwrap';
+  ui.overlay.innerHTML = `<img class="zoom" src="${A(src)}" alt=""><button class="zback" title="Quay lại (Esc)">▼</button>`;
   ui.overlay.onpointerdown = e => { if (!G.dlg) closeOverlay(); };
 }
 function closeOverlay(silent) {
