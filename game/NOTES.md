@@ -17,8 +17,8 @@ Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ v�
 ```
 gate (cổng, Tí độc thoại) → bấm cổng → cut2 (bị chích điện) → hall (Anh Đại: "Tỉnh rồi hả?...")
 Trước khi mở được HO_SO_MAT, bấm máy lọc nước / CELL / KPI ở hành lang sẽ bị chặn ("Anh Đại đang để mắt tới mình").
-office ─┬─ desk (sổ St5K) ── pc (KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC)
-        ├─ desk2 (máy người khác)
+office ─┬─ desk (bàn máy 04 của Tí, slide 35) ── pc (màn hình máy 04, slide 34: KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC)
+        ├─ desk2 (bàn người khác, có cuốn sổ dán mật khẩu St5K)
         ├─ corner (đồng hồ số 4, thùng rác số 20)
         └─↓ hallOffice ─← hall ─┬─ hallWater (ly số 2)
                                 ├─ hallKPI (chữ K) ── cửa gỗ ── boss ─┬─ bossLeft
@@ -26,6 +26,8 @@ office ─┬─ desk (sổ St5K) ── pc (KICH_BAN, DANH_SACH, HO_SO_MAT khó
                                 └─ cellDoor (keypad 2042K = giấy 20 + đồng hồ 4 + ly 2 + chữ K) ── cells (cửa 603 ở cuối hành lang, chiếu cut3, rồi Mission Complete, rồi The End)
 ```
 Tọa độ điểm click (`spots`) và mũi tên (`nav`) nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh. Ở góc nhìn văn phòng có biển "MÁY 04 · CHỖ CỦA TÍ" chỉ bàn an toàn.
+
+Khu văn phòng theo deck `source/cuoc goi tu campuchia` slide 32–37: 33 cửa OFFICE (`hallOffice`), 34 màn hình máy 04 (`pc`), 35 bàn máy 04 (`desk`), 36 toàn cảnh (`office`), 37 góc bảng ghim (`corner`).
 
 ## Anh Đại đi tuần
 Lộ trình: phòng ông trùm, hành lang, phòng làm việc, hành lang, lặp lại. Trước khi ổng tới khu vực bạn đang đứng khoảng 4 giây sẽ có cảnh báo tiếng bước chân. Đứng ở góc nhìn `desk` hoặc `pc` (bàn máy số 4) thì an toàn. Ở các góc khác, thanh nghi ngờ sẽ tăng. Đầy thanh thì chiếu cut2 và mất 1 mạng. Mất đủ 3 mạng là thua. Lấy được chìa khóa thì có 60 giây.

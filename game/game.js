@@ -183,12 +183,14 @@ const VIEWS = {
     { x: 218, y: 700, w: 742, h: 340, label: 'Bàn máy khác', go: 'desk2' },
     { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
   ], draw: drawDeskTag },
-  desk: { nav: [NF(335, 470, 'pc', 'Mở máy 04'), NB('office', 'Đứng dậy')], spots: [
-    { x: 60, y: 165, w: 555, h: 630, label: 'Màn hình máy 04', go: 'pc' },
-    { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
+  // bàn máy 04 của Tí (slide 35) → màn hình máy 04 (slide 34)
+  desk: { nav: [NF(560, 330, 'pc', 'Mở máy 04'), NB('office', 'Đứng dậy')], spots: [
+    { x: 235, y: 45, w: 640, h: 590, label: 'Màn hình máy 04', go: 'pc' },
   ] },
+  // bàn người khác: còn mở máy, có cuốn sổ dán mật khẩu
   desk2: { nav: [NB('office')], spots: [
-    { x: 180, y: 120, w: 1250, h: 900, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
+    { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
+    { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
   pc: { nav: [NB('desk', 'Rời màn hình')], spots: [
     { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
@@ -312,8 +314,8 @@ const L = {
   good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi làm vậy mới ngoan nghen.' },
   note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ có dán mật khẩu: St5K. Dán ngay trên bàn luôn, bảo mật dữ thần!' },
   note2: { who: 'ti', v: 'note2_ti', text: 'Chắc là mật khẩu thư mục bị khóa trong máy 04. Thử liền!' },
-  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy này tắt rồi. Toàn giấy ghi số điện thoại lạ, chắc là danh sách người bị lừa.' },
-  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai rồi. Mật khẩu chắc ghi đâu đó quanh cái bàn này thôi.' },
+  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy bàn bên còn mở app nhắn tin, toàn kịch bản dụ người ta chuyển tiền. Ghê thiệt!' },
+  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai rồi. Mật khẩu chắc ghi đâu đó quanh mấy cái bàn này thôi.' },
   pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi! Hồ sơ ghi An Yên bị nhốt ở buồng cuối dãy phòng giam.' },
   pcopen2: { who: 'ti', v: 'pcopen2_ti', text: 'Có cả ghi chú cách ghép mã cửa. Còn chìa khóa buồng thì ông Đại cất trong phòng riêng.' },
   board: { who: 'ti', v: 'board_ti', text: 'Bảng ghim toàn ảnh thẻ người làm ở đây... Ủa, có cả ảnh An Yên nè.' },
@@ -625,18 +627,18 @@ function missionComplete() {
 }
 function endScreen() {
   G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu');
-  showScreen(`<img class="bg" src="${A('ui/end_bg.jpg')}" alt="">
+  // giống menu chính: chữ The End trên màn hình máy tính, 2 tờ note Restart / Quit bên dưới
+  showScreen(`<img class="bg" src="${A('ui/menu_bg.jpg')}" alt="">
     <img class="abs" src="${A('ui/end_title.png')}" style="left:201px;top:298px;width:701px;height:295px" alt="The End">
-    ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 735, 835, 208, 200)}
-    <div class="end-note">Cảnh giác với lời mời "việc nhẹ lương cao" ở nước ngoài. Có nghi vấn, báo ngay cho công an (113).</div>`, s => {
+    ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 722, 842, 208, 200)}`, s => {
     s.querySelector('#e-restart').onclick = startGame;
     s.querySelector('#e-quit').onclick = showMenu;
   });
 }
 function gameOver() {
   G.mode = 'end'; ui.hud.classList.add('hidden'); bgm('menu');
-  showScreen(`<img class="bg" src="${A('ui/end_bg.jpg')}" alt=""><div class="over-title">BỊ LỘ RỒI!</div>
-    ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 735, 835, 208, 200)}`, s => {
+  showScreen(`<img class="bg" src="${A('ui/menu_bg.jpg')}" alt=""><div class="over-title">BỊ LỘ RỒI!</div>
+    ${ib('e-restart', 'restart', 527, 842, 208, 200)}${ib('e-quit', 'quit', 722, 842, 208, 200)}`, s => {
     s.querySelector('#e-restart').onclick = startGame;
     s.querySelector('#e-quit').onclick = showMenu;
   });
@@ -674,8 +676,8 @@ function hint() {
     const where = { cup: 'cái ly ở máy lọc nước (hành lang)', clock: 'đồng hồ (góc phòng làm việc)', k: 'bảng KPI (hành lang)', paper: 'thùng rác (góc phòng làm việc)' };
     const miss = LETTERS.filter(c => !has(c)).map(c => where[c]);
     t = miss.length ? 'Còn thiếu: ' + miss.join(' · ') : 'Ghép theo ghi chú: giấy (20) + đồng hồ (4) + ly (2) + chữ (K) = 2042K. Nhập ở bàn phím cạnh cửa CELL.';
-  } else if (has('note')) t = 'Bấm vào màn hình máy 04, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
-  else if (G.flags.entered) t = 'Vào văn phòng (cửa OFFICE), tới bàn máy 04, xem cuốn sổ trên bàn.';
+  } else if (has('note')) t = 'Về bàn máy 04 (có biển MÁY 04), bấm vào màn hình, mở thư mục HO_SO_MAT, nhập mật khẩu trên cuốn sổ.';
+  else if (G.flags.entered) t = 'Vào văn phòng (cửa OFFICE). Cuốn sổ có mật khẩu nằm ở bàn máy bên cạnh, rồi về bàn máy 04 mở máy.';
   else t = 'Bấm vào cổng để vào khu nhà.';
   toast('💡 ' + t, 5000);
 }
