@@ -4,36 +4,36 @@ Thu bằng điện thoại, đặt đúng tên file (đuôi .mp3 hoặc đổi s
 
 | File | Nhân vật | Câu thoại |
 |---|---|---|
-| gate1_ti.mp3 | Tí | Tới rồi nè! Theo tin báo, con nhỏ An Yên bị nhốt trong cái khu này nè bà con. |
-| gate2_ti.mp3 | Tí | Giả bộ đi xin việc cái đã. Dzô được bên trong rồi tính tiếp, lo gì! |
-| notyet_ti.mp3 | Tí | Dìa gì mà dìa! An Yên còn kẹt trong đó kìa cha nội. |
-| wake_dai.mp3 | Anh Đại | Ê, tỉnh rồi hả mậy? Từ bữa nay mầy là người của tao nghen! |
-| intro_dai.mp3 | Anh Đại | Dzô ngồi máy 04 mần cho đàng hoàng. Lười là tao chích điện cho tóc dựng đứng luôn á! |
-| endure_ti.mp3 | Tí | (Nhịn... nhịn... một điều nhịn chín điều lành. Dzô văn phòng mở máy 04 cái đã.) |
-| watch_ti.mp3 | Tí | Ổng đang ngó mình chằm chằm kìa trời. Dzô máy 04 trước, lộn xộn là ăn điện à nghen. |
-| good_dai.mp3 | Anh Đại | Ừ, ngồi im mần vậy mới ngoan nghen. |
-| note_ti.mp3 | Tí | Cha, cuốn sổ của ai mà dán mật khẩu chình ình: St5K. Bảo mật dữ thần! |
-| note2_ti.mp3 | Tí | Chắc là mật khẩu thư mục trong máy 04 chớ gì nữa. Hên quá xá! |
-| desk2_ti.mp3 | Tí | Máy này tắt ngúm rồi. Dán đầy số điện thoại lạ hoắc, coi bộ toàn nạn nhân hông hà. |
-| pcwrong_ti.mp3 | Tí | Trật lất rồi! Mật khẩu chắc ghi đâu quanh bàn này thôi, kiếm lại coi. |
-| pcopen_ti.mp3 | Tí | Mở được rồi bà con ơi! An Yên bị nhốt ở buồng cuối dãy phòng giam. |
-| pcopen2_ti.mp3 | Tí | Có ghi chú cách ghép mã cửa nữa nè. Còn chìa khóa thì ông Đại giữ trong phòng riêng, khó ăn à nghen. |
-| board_ti.mp3 | Tí | Bảng ghim toàn ảnh thẻ mấy người làm ở đây. Ủa, có cả ảnh An Yên nè! |
-| clock_ti.mp3 | Tí | Đồng hồ hư rồi, kim giây cứ giựt giựt ở số 4. Còn ai tô xanh lè con số nữa chớ. |
-| paper_ti.mp3 | Tí | Lục thùng rác ra mẩu giấy ghi số 20 mực xanh. Đi điều tra mà như đi lượm ve chai! |
-| cup_ti.mp3 | Tí | Cái ly có số 2 mực xanh nè. Nét chữ y chang mẩu giấy số 20 luôn. |
-| k_ti.mp3 | Tí | Chữ K trong "KPI" tô vàng chóe vậy ai mà hổng thấy. Thêm một manh mối nữa rồi! |
-| doorlocked_ti.mp3 | Tí | Cửa khóa mã rồi. Coi lại ghi chú trong hồ sơ coi ghép mã sao. |
-| kpok_ti.mp3 | Tí | Bíp một cái, song sắt kéo lên từ từ. Ngon lành cành đào! |
-| kpwrong_ti.mp3 | Tí | Bíp bíp! Trật rồi. Bình tĩnh, coi lại thứ tự trong ghi chú. |
-| skull_ti.mp3 | Tí | Cái đầu hươu này ngậm cái gì lủng lẳng trong miệng kìa... |
-| keys_ti.mp3 | Tí | Chùm chìa khóa nè! Giấu trong miệng đầu hươu, ông Đại cũng sáng tạo dữ ha. |
-| nokey_yen.mp3 | An Yên | Anh ơi cứu em dới! Chìa khóa ông Đại giữ, cất trong phòng riêng ổng á! |
+| gate1_ti.mp3 | Tí | Tin báo nói An Yên bị nhốt trong khu này. Nhìn cái cổng thôi đã thấy mờ ám rồi. |
+| gate2_ti.mp3 | Tí | Mình giả bộ đi xin việc để lọt vô trong. Diễn cho khéo nghen Tí, đừng để lộ cái mặt công an. |
+| notyet_ti.mp3 | Tí | Chưa cứu được An Yên mà về là bị sếp la cho thúi đầu. Vô thôi! |
+| wake_dai.mp3 | Anh Đại | Tỉnh rồi hả? Từ nay mày làm cho tao. Ở đây tao nói gì nghe nấy, nghe chưa? |
+| intro_dai.mp3 | Anh Đại | Ra văn phòng ngồi máy 04 mà làm. Thấy lười là tao chích điện cho dựng tóc luôn á! |
+| endure_ti.mp3 | Tí | (Nhịn... nhịn... Ra văn phòng mở máy 04 coi có manh mối gì hông.) |
+| watch_ti.mp3 | Tí | Ổng đang ngó mình kìa. Ra máy 04 làm bộ chăm chỉ cái đã. |
+| good_dai.mp3 | Anh Đại | Ừ, ngồi làm vậy mới ngoan nghen. |
+| note_ti.mp3 | Tí | Cuốn sổ có dán mật khẩu: St5K. Dán ngay trên bàn luôn, bảo mật dữ thần! |
+| note2_ti.mp3 | Tí | Chắc là mật khẩu thư mục bị khóa trong máy 04. Thử liền! |
+| desk2_ti.mp3 | Tí | Máy này tắt rồi. Toàn giấy ghi số điện thoại lạ, chắc là danh sách người bị lừa. |
+| pcwrong_ti.mp3 | Tí | Sai rồi. Mật khẩu chắc ghi đâu đó quanh cái bàn này thôi. |
+| pcopen_ti.mp3 | Tí | Mở được rồi! Hồ sơ ghi An Yên bị nhốt ở buồng cuối dãy phòng giam. |
+| pcopen2_ti.mp3 | Tí | Có cả ghi chú cách ghép mã cửa. Còn chìa khóa buồng thì ông Đại cất trong phòng riêng. |
+| board_ti.mp3 | Tí | Bảng ghim toàn ảnh thẻ người làm ở đây... Ủa, có cả ảnh An Yên nè. |
+| clock_ti.mp3 | Tí | Đồng hồ hư, kim giây cứ giật hoài ở số 4. Mà sao số 4 lại tô màu xanh ta? |
+| paper_ti.mp3 | Tí | Trong thùng rác có mẩu giấy ghi số 20 mực xanh. Đi điều tra mà như đi lượm ve chai! |
+| cup_ti.mp3 | Tí | Cái ly có số 2 viết mực xanh, y chang mẩu giấy số 20. |
+| k_ti.mp3 | Tí | Chữ K trong KPI tô vàng chóe vậy ai mà hông thấy. Thêm một manh mối! |
+| doorlocked_ti.mp3 | Tí | Cửa khóa mã rồi. Phải ghép mã theo ghi chú trong hồ sơ mật. |
+| kpok_ti.mp3 | Tí | Bíp! Song sắt kéo lên rồi. Ngon lành! |
+| kpwrong_ti.mp3 | Tí | Sai mã rồi. Bình tĩnh, coi lại thứ tự trong ghi chú. |
+| skull_ti.mp3 | Tí | Cái đầu hươu này hình như ngậm cái gì trong miệng... |
+| keys_ti.mp3 | Tí | Chùm chìa khóa nè! Giấu trong miệng đầu hươu, ông Đại cũng sáng tạo ghê. |
+| nokey_yen.mp3 | An Yên | Anh ơi cứu em! Chìa khóa ông Đại giữ, ổng cất trong phòng riêng á. |
 | wrongcell_ti.mp3 | Tí | Hông phải buồng này. An Yên ở buồng cuối dãy lận. |
-| yen1_yen.mp3 | An Yên | Anh... anh tới cứu em thiệt hả anh? |
-| ti1_ti.mp3 | Tí | Anh là Tí, công an nè. Gia đình em báo tin rồi. Mình đi lẹ lẹ! |
-| yen2_yen.mp3 | An Yên | Em tưởng hổng bao giờ được dìa nhà nữa chớ... |
-| ti2_ti.mp3 | Tí | Bám sát anh nghen. Ra khỏi cổng là an toàn! |
-| caught_dai.mp3 | Anh Đại | Ê ê, lảng vảng gì đó mậy? Ăn điện nè! |
-| afterzap_dai.mp3 | Anh Đại | Dìa chỗ ngồi chạy KPI cho tao, lẹ! |
-| gameover_dai.mp3 | Anh Đại | Ba lần rồi đó nghen. Thôi ở lại đây với tao luôn đi mậy! |
+| yen1_yen.mp3 | An Yên | Anh... anh tới cứu em thiệt hả? |
+| ti1_ti.mp3 | Tí | Anh là Tí, công an. Gia đình em báo tin rồi. Mình đi liền! |
+| yen2_yen.mp3 | An Yên | Em tưởng không bao giờ được về nhà nữa... |
+| ti2_ti.mp3 | Tí | Theo sát anh nghen. Ra khỏi cổng là an toàn rồi! |
+| caught_dai.mp3 | Anh Đại | Ê, lảng vảng đây làm gì đó mậy? Ăn điện nè! |
+| afterzap_dai.mp3 | Anh Đại | Về chỗ ngồi chạy KPI cho tao, lẹ! |
+| gameover_dai.mp3 | Anh Đại | Ba lần rồi đó nghen. Thôi ở lại đây làm cho tao luôn đi! |

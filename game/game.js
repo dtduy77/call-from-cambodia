@@ -149,65 +149,80 @@ function newGame() {
 const has = id => G.inv.has(id);
 
 /* ---------------- Views & hotspots (1920×1080 art coordinates) ---------------- */
+// nav: NF = đi tới (mũi tên hướng lên, đặt ngay chỗ đi vào), NL / NR = quay trái / phải (mép màn hình), NB = quay lại (mũi tên chữ U ở giữa đáy)
+const NF = (x, y, to, label, o = {}) => ({ dir: 'fwd', x, y, to, label, ...o });
+const NL = (to, label, o = {}) => ({ dir: 'left', x: 86, y: 540, to, label, ...o });
+const NR = (to, label, o = {}) => ({ dir: 'right', x: 1834, y: 540, to, label, ...o });
+const NB = (to, label = 'Quay lại') => ({ dir: 'back', x: 960, y: 1000, to, label });
 const VIEWS = {
-  office: { dai: { x: 760, h: 880 }, arrows: { down: 'hallOffice' }, spots: [
-    { x: 993, y: 700, w: 665, h: 360, label: 'Bàn máy số 4', go: 'desk' },
-    { x: 218, y: 700, w: 742, h: 360, label: 'Bàn máy khác', go: 'desk2' },
-    { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
+  gate: { nav: [NF(960, 820, () => enterCompound(), 'Vào khu nhà'), NB(() => dialog([L.notyet]), 'Bỏ về')], spots: [
+    { x: 330, y: 330, w: 1320, h: 560, label: 'Cổng khu nhà', act: () => enterCompound() },
   ] },
-  desk: { arrows: { down: 'office' }, spots: [
-    { x: 55, y: 175, w: 556, h: 545, label: 'Màn hình máy số 4', go: 'pc' },
-    { x: 1040, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
-  ] },
-  desk2: { arrows: { down: 'office' }, spots: [
-    { x: 180, y: 120, w: 1250, h: 900, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
-  ] },
-  pc: { arrows: { down: 'desk' }, spots: [
-    { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
-    { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
-    { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
-    { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
-  ], draw: drawPcLabels },
-  corner: { arrows: { down: 'office' }, spots: [
-    { x: 268, y: 137, w: 576, h: 314, label: 'Bảng ghim', act: () => dialog([L.board]) },
-    { x: 993, y: 131, w: 272, h: 273, label: 'Đồng hồ', act: () => collect('clock') },
-    { x: 1150, y: 600, w: 310, h: 420, label: 'Thùng rác', act: () => collect('paper') },
-  ] },
-  hallOffice: { dai: { x: 400, h: 860 }, arrows: { left: 'hall' }, spots: [
-    { x: 720, y: 153, w: 894, h: 785, label: 'Vào phòng làm việc', go: 'office' },
-  ] },
-  hall: { dai: { x: 930, h: 720 }, arrows: { down: 'hallOffice' }, spots: [
+  hall: { dai: { x: 930, h: 720 }, nav: [
+    NL('hallWater', 'Máy lọc nước', { lock: true }),
+    NF(800, 760, 'cellDoor', 'Cửa phòng giam (CELL)', { lock: true }),
+    NF(1235, 760, 'hallKPI', 'Bảng KPI · cửa gỗ', { lock: true }),
+    NR('hallOffice', 'Văn phòng (máy 04)'),
+  ], spots: [
     { x: 273, y: 240, w: 196, h: 415, label: 'Máy lọc nước', go: 'hallWater', lock: true },
     { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
     { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
   ] },
-  hallWater: { arrows: { down: 'hall' }, spots: [
+  hallOffice: { dai: { x: 400, h: 860 }, nav: [NF(1160, 930, 'office', 'Vào văn phòng'), NB('hall', 'Ra hành lang')], spots: [
+    { x: 720, y: 153, w: 894, h: 785, label: 'Vào văn phòng', go: 'office' },
+  ] },
+  office: { dai: { x: 760, h: 880 }, nav: [
+    NF(1380, 905, 'desk', 'Bàn máy 04 (chỗ của mình)'),
+    NF(470, 905, 'desk2', 'Bàn máy khác'),
+    NR('corner', 'Góc bảng ghim · đồng hồ'),
+    NB('hallOffice', 'Ra hành lang'),
+  ], spots: [
+    { x: 993, y: 700, w: 665, h: 340, label: 'Bàn máy 04 (chỗ của mình)', go: 'desk' },
+    { x: 218, y: 700, w: 742, h: 340, label: 'Bàn máy khác', go: 'desk2' },
+    { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
+  ], draw: drawDeskTag },
+  desk: { nav: [NF(335, 470, 'pc', 'Mở máy 04'), NB('office', 'Đứng dậy')], spots: [
+    { x: 60, y: 165, w: 555, h: 630, label: 'Màn hình máy 04', go: 'pc' },
+    { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
+  ] },
+  desk2: { nav: [NB('office')], spots: [
+    { x: 180, y: 120, w: 1250, h: 900, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
+  ] },
+  pc: { nav: [NB('desk', 'Rời màn hình')], spots: [
+    { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
+    { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
+    { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
+    { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
+  ], draw: drawPcLabels },
+  corner: { nav: [NB('office')], spots: [
+    { x: 268, y: 100, w: 576, h: 350, label: 'Bảng ghim', act: () => dialog([L.board]) },
+    { x: 980, y: 40, w: 300, h: 320, label: 'Đồng hồ', shape: 'ellipse', act: () => collect('clock') },
+    { x: 1150, y: 605, w: 300, h: 380, label: 'Thùng rác', act: () => collect('paper') },
+  ] },
+  hallWater: { nav: [NB('hall')], spots: [
     { x: 1190, y: 630, w: 110, h: 150, label: 'Cái ly', act: () => collect('cup') },
   ] },
-  hallKPI: { dai: { x: 1140, h: 900 }, arrows: { down: 'hall' }, spots: [
+  hallKPI: { dai: { x: 1140, h: 900 }, nav: [NF(1140, 900, 'boss', 'Phòng ông trùm', { sfx: 'door' }), NB('hall')], spots: [
     { x: 22, y: 76, w: 698, h: 491, label: 'Bảng KPI', act: () => collect('k') },
-    { x: 862, y: 76, w: 556, h: 971, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
+    { x: 862, y: 76, w: 556, h: 760, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
   ] },
-  boss: { dai: { x: 900, h: 900 }, arrows: { down: 'hallKPI' }, spots: [
-    { x: 33, y: 327, w: 665, h: 720, label: 'Góc làm việc', go: 'bossLeft' },
-    { x: 1222, y: 262, w: 698, h: 785, label: 'Góc sofa', go: 'bossRight' },
+  boss: { dai: { x: 900, h: 900 }, nav: [NL('bossLeft', 'Góc làm việc'), NR('bossRight', 'Góc sofa'), NB('hallKPI', 'Ra hành lang')], spots: [
+    { x: 33, y: 327, w: 665, h: 620, label: 'Góc làm việc', go: 'bossLeft' },
+    { x: 1222, y: 262, w: 560, h: 685, label: 'Góc sofa', go: 'bossRight' },
   ] },
-  bossLeft: { arrows: { down: 'boss', right: 'bossRight' }, spots: [] },
-  bossRight: { arrows: { down: 'boss', left: 'bossLeft' }, spots: [
-    { x: 720, y: 60, w: 340, h: 480, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
+  bossLeft: { nav: [NR('bossRight', 'Góc sofa'), NB('boss')], spots: [] },
+  bossRight: { nav: [NL('bossLeft', 'Góc làm việc'), NB('boss')], spots: [
+    { x: 720, y: 60, w: 340, h: 420, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
   ] },
-  cellDoor: { arrows: { down: 'hall' }, spots: [
-    { x: 436, y: 120, w: 797, h: 884, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: cellDoorAct },
-    { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: openKeypad },
+  cellDoor: { nav: [NF(840, 830, () => cellDoorAct(), 'Vào phòng giam'), NB('hall')], spots: [
+    { x: 436, y: 120, w: 797, h: 700, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: () => cellDoorAct() },
+    { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: () => openKeypad() },
   ], draw: drawCellBars },
-  gate: { arrows: { left: () => dialog([L.notyet]) }, spots: [
-    { x: 330, y: 330, w: 1320, h: 760, label: 'Vào khu nhà', act: enterCompound },
-  ] },
-  cells: { arrows: { down: 'cellDoor' }, spots: [
-    { x: 985, y: 125, w: 215, h: 955, label: 'Phòng 602', act: () => cellAct(602) },
-    { x: 760, y: 365, w: 85, h: 635, label: 'Phòng 609', act: () => cellAct(609) },
-    { x: 630, y: 450, w: 50, h: 500, label: 'Phòng 601', act: () => cellAct(601) },
+  cells: { nav: [NB('cellDoor')], spots: [
+    { x: 985, y: 125, w: 215, h: 800, label: 'Phòng 602', act: () => cellAct(602) },
+    { x: 760, y: 365, w: 85, h: 560, label: 'Phòng 609', act: () => cellAct(609) },
+    { x: 630, y: 450, w: 50, h: 480, label: 'Phòng 601', act: () => cellAct(601) },
     { x: 340, y: 510, w: 145, h: 390, label: 'Buồng cuối dãy (603)', act: () => cellAct(603) },
   ] },
 };
@@ -217,6 +232,16 @@ const spotsOf = v => VIEWS[v].spots.filter(s => !s.cond || s.cond());
 function drawPcLabels() {
   ctx.font = '30px VT323, monospace'; ctx.fillStyle = '#2b2b24';
   ['KICH_BAN', 'DANH_SACH', 'HO_SO_MAT' + (G.flags.folder ? '' : ' 🔒'), 'THUNG_RAC'].forEach((t, i) => ctx.fillText(t, 618, 214 + i * 76));
+}
+function drawDeskTag() {
+  // tấm biển nhỏ chỉ rõ bàn của Tí, để lúc chạy về khỏi lạc
+  const x = 1380, y = 668 + Math.sin(G.t * 3) * 4;
+  ctx.save(); ctx.font = '800 26px "Be Vietnam Pro", sans-serif'; ctx.textAlign = 'center';
+  const t = 'MÁY 04 · CHỖ CỦA TÍ', w = ctx.measureText(t).width + 36;
+  ctx.fillStyle = 'rgba(226,203,178,.95)'; ctx.strokeStyle = '#16181c'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.roundRect(x - w / 2, y - 24, w, 46, 8); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x - 14, y + 22); ctx.lineTo(x, y + 40); ctx.lineTo(x + 14, y + 22); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c8342b'; ctx.fillText(t, x, y + 9); ctx.restore();
 }
 function drawCellBars() {
   if (G.flags.gate) return;
@@ -246,7 +271,7 @@ function go(view, sfx) {
 
 /* ---------------- Dialogue (only on puzzle-critical moments) ---------------- */
 const WHO = {
-  ti: { name: 'TÍ CÔNG AN', box: 'ui/box_ti.png', side: 'l' },
+  ti: { name: 'TÍ CÔNG AN', box: 'ui/box_ti.png', side: 'l', fig: 'chars/ti.png', figSide: 'right' },
   dai: { name: 'ANH ĐẠI', box: 'ui/box_dai.png', side: 'r', fig: 'chars/dai.png', figSide: 'left' },
   yen: { name: 'AN YÊN', box: 'ui/box_yen.png', side: 'l', fig: 'chars/yen.png', figSide: 'right' },
 };
@@ -276,39 +301,39 @@ function nextLine() {
 }
 ui.dialog.addEventListener('pointerdown', e => { e.stopPropagation(); nextLine(); });
 const L = {
-  gate1: { who: 'ti', v: 'gate1_ti', text: 'Tới rồi nè! Theo tin báo, con nhỏ An Yên bị nhốt trong cái khu này nè bà con.' },
-  gate2: { who: 'ti', v: 'gate2_ti', text: 'Giả bộ đi xin việc cái đã. Dzô được bên trong rồi tính tiếp, lo gì!' },
-  notyet: { who: 'ti', v: 'notyet_ti', text: 'Dìa gì mà dìa! An Yên còn kẹt trong đó kìa cha nội.' },
-  wake: { who: 'dai', v: 'wake_dai', text: 'Ê, tỉnh rồi hả mậy? Từ bữa nay mầy là người của tao nghen!' },
-  intro: { who: 'dai', v: 'intro_dai', text: 'Dzô ngồi máy 04 mần cho đàng hoàng. Lười là tao chích điện cho tóc dựng đứng luôn á!' },
-  endure: { who: 'ti', v: 'endure_ti', text: '(Nhịn... nhịn... một điều nhịn chín điều lành. Dzô văn phòng mở máy 04 cái đã.)' },
-  watch: { who: 'ti', v: 'watch_ti', text: 'Ổng đang ngó mình chằm chằm kìa trời. Dzô máy 04 trước, lộn xộn là ăn điện à nghen.' },
-  good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi im mần vậy mới ngoan nghen.' },
-  note: { who: 'ti', v: 'note_ti', text: 'Cha, cuốn sổ của ai mà dán mật khẩu chình ình: St5K. Bảo mật dữ thần!' },
-  note2: { who: 'ti', v: 'note2_ti', text: 'Chắc là mật khẩu thư mục trong máy 04 chớ gì nữa. Hên quá xá!' },
-  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy này tắt ngúm rồi. Dán đầy số điện thoại lạ hoắc, coi bộ toàn nạn nhân hông hà.' },
-  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Trật lất rồi! Mật khẩu chắc ghi đâu quanh bàn này thôi, kiếm lại coi.' },
-  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi bà con ơi! An Yên bị nhốt ở buồng cuối dãy phòng giam.' },
-  pcopen2: { who: 'ti', v: 'pcopen2_ti', text: 'Có ghi chú cách ghép mã cửa nữa nè. Còn chìa khóa thì ông Đại giữ trong phòng riêng, khó ăn à nghen.' },
-  board: { who: 'ti', v: 'board_ti', text: 'Bảng ghim toàn ảnh thẻ mấy người làm ở đây. Ủa, có cả ảnh An Yên nè!' },
-  clock: { who: 'ti', v: 'clock_ti', text: 'Đồng hồ hư rồi, kim giây cứ giựt giựt ở số 4. Còn ai tô xanh lè con số nữa chớ.' },
-  paper: { who: 'ti', v: 'paper_ti', text: 'Lục thùng rác ra mẩu giấy ghi số 20 mực xanh. Đi điều tra mà như đi lượm ve chai!' },
-  cup: { who: 'ti', v: 'cup_ti', text: 'Cái ly có số 2 mực xanh nè. Nét chữ y chang mẩu giấy số 20 luôn.' },
-  k: { who: 'ti', v: 'k_ti', text: 'Chữ K trong "KPI" tô vàng chóe vậy ai mà hổng thấy. Thêm một manh mối nữa rồi!' },
-  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa mã rồi. Coi lại ghi chú trong hồ sơ coi ghép mã sao.' },
-  kpok: { who: 'ti', v: 'kpok_ti', text: 'Bíp một cái, song sắt kéo lên từ từ. Ngon lành cành đào!' },
-  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Bíp bíp! Trật rồi. Bình tĩnh, coi lại thứ tự trong ghi chú.' },
-  skull: { who: 'ti', v: 'skull_ti', text: 'Cái đầu hươu này ngậm cái gì lủng lẳng trong miệng kìa...' },
-  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa nè! Giấu trong miệng đầu hươu, ông Đại cũng sáng tạo dữ ha.' },
-  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em dới! Chìa khóa ông Đại giữ, cất trong phòng riêng ổng á!' },
+  gate1: { who: 'ti', v: 'gate1_ti', text: 'Tin báo nói An Yên bị nhốt trong khu này. Nhìn cái cổng thôi đã thấy mờ ám rồi.' },
+  gate2: { who: 'ti', v: 'gate2_ti', text: 'Mình giả bộ đi xin việc để lọt vô trong. Diễn cho khéo nghen Tí, đừng để lộ cái mặt công an.' },
+  notyet: { who: 'ti', v: 'notyet_ti', text: 'Chưa cứu được An Yên mà về là bị sếp la cho thúi đầu. Vô thôi!' },
+  wake: { who: 'dai', v: 'wake_dai', text: 'Tỉnh rồi hả? Từ nay mày làm cho tao. Ở đây tao nói gì nghe nấy, nghe chưa?' },
+  intro: { who: 'dai', v: 'intro_dai', text: 'Ra văn phòng ngồi máy 04 mà làm. Thấy lười là tao chích điện cho dựng tóc luôn á!' },
+  endure: { who: 'ti', v: 'endure_ti', text: '(Nhịn... nhịn... Ra văn phòng mở máy 04 coi có manh mối gì hông.)' },
+  watch: { who: 'ti', v: 'watch_ti', text: 'Ổng đang ngó mình kìa. Ra máy 04 làm bộ chăm chỉ cái đã.' },
+  good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi làm vậy mới ngoan nghen.' },
+  note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ có dán mật khẩu: St5K. Dán ngay trên bàn luôn, bảo mật dữ thần!' },
+  note2: { who: 'ti', v: 'note2_ti', text: 'Chắc là mật khẩu thư mục bị khóa trong máy 04. Thử liền!' },
+  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy này tắt rồi. Toàn giấy ghi số điện thoại lạ, chắc là danh sách người bị lừa.' },
+  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai rồi. Mật khẩu chắc ghi đâu đó quanh cái bàn này thôi.' },
+  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi! Hồ sơ ghi An Yên bị nhốt ở buồng cuối dãy phòng giam.' },
+  pcopen2: { who: 'ti', v: 'pcopen2_ti', text: 'Có cả ghi chú cách ghép mã cửa. Còn chìa khóa buồng thì ông Đại cất trong phòng riêng.' },
+  board: { who: 'ti', v: 'board_ti', text: 'Bảng ghim toàn ảnh thẻ người làm ở đây... Ủa, có cả ảnh An Yên nè.' },
+  clock: { who: 'ti', v: 'clock_ti', text: 'Đồng hồ hư, kim giây cứ giật hoài ở số 4. Mà sao số 4 lại tô màu xanh ta?' },
+  paper: { who: 'ti', v: 'paper_ti', text: 'Trong thùng rác có mẩu giấy ghi số 20 mực xanh. Đi điều tra mà như đi lượm ve chai!' },
+  cup: { who: 'ti', v: 'cup_ti', text: 'Cái ly có số 2 viết mực xanh, y chang mẩu giấy số 20.' },
+  k: { who: 'ti', v: 'k_ti', text: 'Chữ K trong KPI tô vàng chóe vậy ai mà hông thấy. Thêm một manh mối!' },
+  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa mã rồi. Phải ghép mã theo ghi chú trong hồ sơ mật.' },
+  kpok: { who: 'ti', v: 'kpok_ti', text: 'Bíp! Song sắt kéo lên rồi. Ngon lành!' },
+  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Sai mã rồi. Bình tĩnh, coi lại thứ tự trong ghi chú.' },
+  skull: { who: 'ti', v: 'skull_ti', text: 'Cái đầu hươu này hình như ngậm cái gì trong miệng...' },
+  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa nè! Giấu trong miệng đầu hươu, ông Đại cũng sáng tạo ghê.' },
+  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em! Chìa khóa ông Đại giữ, ổng cất trong phòng riêng á.' },
   wrongcell: { who: 'ti', v: 'wrongcell_ti', text: 'Hông phải buồng này. An Yên ở buồng cuối dãy lận.' },
-  yen1: { who: 'yen', v: 'yen1_yen', text: 'Anh... anh tới cứu em thiệt hả anh?' },
-  ti1: { who: 'ti', v: 'ti1_ti', text: 'Anh là Tí, công an nè. Gia đình em báo tin rồi. Mình đi lẹ lẹ!' },
-  yen2: { who: 'yen', v: 'yen2_yen', text: 'Em tưởng hổng bao giờ được dìa nhà nữa chớ...' },
-  ti2: { who: 'ti', v: 'ti2_ti', text: 'Bám sát anh nghen. Ra khỏi cổng là an toàn!' },
-  caught: { who: 'dai', v: 'caught_dai', text: 'Ê ê, lảng vảng gì đó mậy? Ăn điện nè!' },
-  afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Dìa chỗ ngồi chạy KPI cho tao, lẹ!' },
-  gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nghen. Thôi ở lại đây với tao luôn đi mậy!' },
+  yen1: { who: 'yen', v: 'yen1_yen', text: 'Anh... anh tới cứu em thiệt hả?' },
+  ti1: { who: 'ti', v: 'ti1_ti', text: 'Anh là Tí, công an. Gia đình em báo tin rồi. Mình đi liền!' },
+  yen2: { who: 'yen', v: 'yen2_yen', text: 'Em tưởng không bao giờ được về nhà nữa...' },
+  ti2: { who: 'ti', v: 'ti2_ti', text: 'Theo sát anh nghen. Ra khỏi cổng là an toàn rồi!' },
+  caught: { who: 'dai', v: 'caught_dai', text: 'Ê, lảng vảng đây làm gì đó mậy? Ăn điện nè!' },
+  afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Về chỗ ngồi chạy KPI cho tao, lẹ!' },
+  gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nghen. Thôi ở lại đây làm cho tao luôn đi!' },
 };
 
 /* ---------------- Inventory ---------------- */
@@ -322,8 +347,9 @@ const ITEMS = {
   key: { img: 'props/keys.png', t: '', name: 'Chùm chìa khóa' },
 };
 function renderInv() {
-  ui.inv.innerHTML = Object.entries(ITEMS).map(([id, it]) =>
-    `<div class="slot ${has(id) ? '' : 'empty'}" title="${it.name}"><img src="${A(it.img)}" alt="">${has(id) && it.t ? `<span class="t">${it.t}</span>` : ''}</div>`).join('');
+  ui.inv.innerHTML = `<div class="lbl">ĐỒ ĐÃ LƯỢM</div><div class="slots">` + Object.entries(ITEMS).map(([id, it]) => has(id)
+    ? `<div class="slot" title="${it.name}"><img class="${id === 'file' ? 'photo' : ''}" src="${A(it.img)}" alt="">${it.t ? `<span class="t">${it.t}</span>` : ''}</div>`
+    : `<div class="slot empty" title="Chưa có">?</div>`).join('') + '</div>';
 }
 const ZOOM = { note: 'props/binder.png', clock: 'props/clock.png', paper: 'props/paper20.png', cup: 'props/cup.png', k: 'props/k.png', key: 'props/keys.png' };
 function collect(id) {
@@ -514,8 +540,8 @@ function showMenu() {
 }
 function showOptions(back) {
   showScreen(`${panelBg()}<img class="bg" src="${A('ui/opt_panel.webp')}" alt="">
-    ${ib('o-sound', 'opt_sound', 947, 530, 169, 74, 256, 128)}${ib('o-tut', 'opt_tut', 958, 640, 253, 75, 256, 128)}
-    ${ib('o-quit', 'opt_quit', 962, 758, 286, 85, 367, 128)}${ib('o-back', 'back', 959, 873, 82, 42, 128, 64)}`,
+    ${ib('o-sound', 'opt_sound', 947, 530, 169, 74)}${ib('o-tut', 'opt_tut', 958, 640, 253, 75)}
+    ${ib('o-quit', 'opt_quit', 962, 758, 286, 85)}${ib('o-back', 'back', 959, 873, 82, 42)}`,
   s => {
     s.querySelector('#o-sound').onclick = () => showSound(() => showOptions(back));
     s.querySelector('#o-tut').onclick = () => showTutorial(() => showOptions(back));
@@ -524,30 +550,53 @@ function showOptions(back) {
   });
 }
 function showSound(back) {
+  // một nút loa (bật/tắt, đổi hình theo âm lượng) + thanh kéo + phần trăm
   const row = (key, y) => `
-    <button class="ib" data-full="${key}" style="left:706px;top:${y - 36}px;width:91px;height:71px"><img class="n" src="${A('ui/snd_on.png')}" alt=""><img class="h" src="${A('ui/snd_on.png')}" style="filter:brightness(1.6)" alt=""></button>
-    <div class="slider" data-s="${key}" style="left:823px;top:${y - 20}px;width:425px">
-      <img class="trk" src="${A('ui/snd_track.png')}" alt=""><div class="fil"><img src="${A('ui/snd_fill.png')}" alt=""></div><img class="knob" src="${A('ui/snd_knob.png')}" alt=""></div>
-    <button class="ib" data-mute="${key}" style="left:1264px;top:${y - 45}px;width:74px;height:90px"><img class="n" src="${A('ui/snd_off.png')}" alt=""><img class="h" src="${A('ui/snd_off.png')}" style="filter:brightness(1.6)" alt=""></button>`;
-  showScreen(`${panelBg()}<img class="bg" src="${A('ui/snd_panel.webp')}" alt="">${row('music', 571)}${row('sfx', 724)}${ib('s-back', 'back', 959, 873, 82, 42, 128, 64)}`, s => {
-    const paint = () => s.querySelectorAll('.slider').forEach(sl => {
-      const v = SET[sl.dataset.s]; sl.querySelector('.fil').style.width = (v * 425) + 'px'; sl.querySelector('.knob').style.left = (v * 425) + 'px';
+    <button class="ib snd-ico" data-mute="${key}" style="left:700px;top:${y - 40}px;width:96px;height:80px"><img alt=""></button>
+    <div class="vol" data-s="${key}" style="left:830px;top:${y - 30}px"><div class="vt"><div class="vf"></div><div class="vk"></div></div></div>
+    <div class="vpct" data-p="${key}" style="left:1296px;top:${y - 26}px"></div>`;
+  showScreen(`${panelBg()}<img class="bg" src="${A('ui/snd_panel.webp')}" alt="">${row('music', 571)}${row('sfx', 724)}${ib('s-back', 'back', 959, 873, 82, 42)}`, s => {
+    const last = { music: SET.music || 0.6, sfx: SET.sfx || 0.9 };
+    const paint = () => {
+      s.querySelectorAll('.vol').forEach(sl => {
+        const v = SET[sl.dataset.s];
+        sl.querySelector('.vf').style.width = (v * 100) + '%'; sl.querySelector('.vk').style.left = (v * 100) + '%';
+      });
+      s.querySelectorAll('[data-p]').forEach(d => d.textContent = Math.round(SET[d.dataset.p] * 100) + '%');
+      s.querySelectorAll('[data-mute]').forEach(bt => {
+        const on = SET[bt.dataset.mute] > 0;
+        const im = bt.querySelector('img'); im.src = A(on ? 'ui/snd_on.png' : 'ui/snd_off.png');
+        bt.title = on ? 'Tắt tiếng' : 'Bật tiếng';
+      });
+    };
+    s.querySelectorAll('.vol').forEach(sl => {
+      const key = sl.dataset.s, trk = sl.querySelector('.vt');
+      const setFrom = e => {
+        const r = trk.getBoundingClientRect();
+        SET[key] = Math.round(clamp((e.clientX - r.left) / r.width, 0, 1) * 100) / 100;
+        if (SET[key] > 0) last[key] = SET[key];
+        paint(); applyVolumes();
+      };
+      sl.addEventListener('pointerdown', e => { e.preventDefault(); sl.setPointerCapture(e.pointerId); sl.classList.add('drag'); setFrom(e); });
+      sl.addEventListener('pointermove', e => { if (sl.hasPointerCapture(e.pointerId)) setFrom(e); });
+      const end = e => { if (!sl.classList.contains('drag')) return; sl.classList.remove('drag'); saveSet(); if (key === 'sfx') SFX.click(); };
+      sl.addEventListener('pointerup', end); sl.addEventListener('pointercancel', end);
     });
-    s.querySelectorAll('.slider').forEach(sl => {
-      const setFrom = e => { const p = toStage(e); SET[sl.dataset.s] = clamp((p.x - 823) / 425, 0, 1); paint(); saveSet(); };
-      sl.addEventListener('pointerdown', e => { sl.setPointerCapture(e.pointerId); setFrom(e); sl.onpointermove = setFrom; });
-      sl.addEventListener('pointerup', () => { sl.onpointermove = null; SFX.click(); });
+    s.querySelectorAll('[data-mute]').forEach(bt => bt.onclick = () => {
+      const k = bt.dataset.mute; SET[k] = SET[k] > 0 ? 0 : last[k]; paint(); saveSet();
     });
-    s.querySelectorAll('[data-full]').forEach(b => b.onclick = () => { SET[b.dataset.full] = 1; paint(); saveSet(); });
-    s.querySelectorAll('[data-mute]').forEach(b => b.onclick = () => { SET[b.dataset.mute] = 0; paint(); saveSet(); });
     s.querySelector('#s-back').onclick = back;
     paint();
   });
 }
 function showTutorial(back) {
   showScreen(`${panelBg()}<img class="bg" src="${A('ui/tut_panel.webp')}" alt="">
-    <div class="tut-note">Mũi tên đỏ / phím ← → ↓: đổi góc nhìn · H: gợi ý · Esc: tạm dừng<br>Anh Đại đi tuần: nghe tiếng bước chân thì về <b>bàn máy số 4</b> ngồi!</div>
-    ${ib('t-back', 'back', 959, 873, 82, 42, 128, 64)}`, s => { s.querySelector('#t-back').onclick = back; });
+    <div class="tut-note"><b>MẸO NHỎ</b>
+      <p><span class="k">➜</span> Mũi tên đỏ: đi tới / quay trái phải</p>
+      <p><span class="k">↩</span> Mũi tên chữ U: quay lại</p>
+      <p><span class="k">H</span> Gợi ý &nbsp; <span class="k">Esc</span> Tạm dừng</p>
+      <p class="warn">Nghe tiếng bước chân là chạy về <b>bàn máy 04</b> ngồi liền!</p></div>
+    ${ib('t-back', 'back', 959, 873, 82, 42)}`, s => { s.querySelector('#t-back').onclick = back; });
 }
 function showQuit(back) {
   showScreen(`${panelBg()}<img class="bg" src="${A('ui/quit_panel.webp')}" alt="">${ib('q-yes', 'yes', 783, 646, 90, 78)}${ib('q-no', 'no', 1112, 642, 73, 84)}`, s => {
@@ -631,15 +680,12 @@ function hint() {
 }
 
 /* ---------------- Input ---------------- */
-function arrowRects() {
-  const a = VIEWS[G.view].arrows, r = [];
-  if (a.down) r.push({ dir: 'down', to: a.down, x: 900, y: 940, w: 120, h: 120 });
-  if (a.up) r.push({ dir: 'up', to: a.up, x: 900, y: 700, w: 120, h: 120 });
-  if (a.left) r.push({ dir: 'left', to: a.left, x: 20, y: 480, w: 120, h: 120 });
-  if (a.right) r.push({ dir: 'right', to: a.right, x: 1780, y: 480, w: 120, h: 120 });
-  return r;
+const arrowRects = () => VIEWS[G.view].nav.map(n => ({ ...n, x: n.x - 65, y: n.y - 65, w: 130, h: 130, cx: n.x, cy: n.y }));
+function nav(a) {
+  if (a.lock && !G.flags.folder) return dialog([L.watch]);
+  ui.tip.classList.remove('on');
+  typeof a.to === 'function' ? a.to() : go(a.to, a.sfx);
 }
-const nav = to => typeof to === 'function' ? to() : go(to);
 const inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
 const canInteract = () => G.mode === 'play' && !G.dlg && !G.paused && !G.video && !G.busy && !G.overlay;
 cv.addEventListener('pointermove', e => {
@@ -648,7 +694,8 @@ cv.addEventListener('pointermove', e => {
   G.hoverArrow = arrowRects().find(r => inRect(p, r)) || null;
   G.hover = G.hoverArrow ? null : spotsOf(G.view).find(s => inRect(p, s)) || null;
   cv.style.cursor = (G.hover || G.hoverArrow) ? 'pointer' : 'default';
-  if (G.hover) { ui.tip.textContent = lbl(G.hover); ui.tip.style.left = Math.min(p.x + 24, W - 420) + 'px'; ui.tip.style.top = (p.y + 24) + 'px'; ui.tip.classList.add('on'); }
+  const t = G.hover || G.hoverArrow;
+  if (t) { ui.tip.textContent = G.hover ? lbl(G.hover) : (G.hoverArrow.dir === 'back' ? '↩ ' : '➜ ') + G.hoverArrow.label; ui.tip.style.left = Math.min(p.x + 24, W - 420) + 'px'; ui.tip.style.top = (p.y + 24) + 'px'; ui.tip.classList.add('on'); }
   else ui.tip.classList.remove('on');
 });
 cv.addEventListener('pointerdown', e => {
@@ -657,7 +704,7 @@ cv.addEventListener('pointerdown', e => {
   if (!canInteract()) return;
   const p = toStage(e);
   const a = arrowRects().find(r => inRect(p, r));
-  if (a) { nav(a.to); return; }
+  if (a) { nav(a); return; }
   const s = spotsOf(G.view).find(s => inRect(p, s));
   if (!s) return;
   ui.tip.classList.remove('on');
@@ -676,11 +723,9 @@ addEventListener('keydown', e => {
   if (G.mode !== 'play') return;
   if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { G.paused ? resume() : showPause(); return; }
   if (G.paused || G.busy) return;
-  const a = VIEWS[G.view].arrows;
-  if (e.key === 'ArrowDown' && a.down) { e.preventDefault(); nav(a.down); }
-  if (e.key === 'ArrowUp' && a.up) { e.preventDefault(); nav(a.up); }
-  if (e.key === 'ArrowLeft' && a.left) { e.preventDefault(); nav(a.left); }
-  if (e.key === 'ArrowRight' && a.right) { e.preventDefault(); nav(a.right); }
+  const ns = VIEWS[G.view].nav, by = d => ns.filter(n => n.dir === d);
+  const k = { ArrowDown: by('back'), Backspace: by('back'), ArrowLeft: by('left'), ArrowRight: by('right'), ArrowUp: by('fwd') }[e.key];
+  if (k && k.length === 1) { e.preventDefault(); nav(k[0]); }
   if (e.key === 'h' || e.key === 'H') hint();
 });
 $('#btn-pause').onclick = () => { ac(); SFX.click(); showPause(); };
@@ -695,13 +740,36 @@ function update(dt) {
   if (G.alarm) { G.countdown -= dt; if (G.countdown <= 0) { G.countdown = 0; G.alarm = false; caught(); } }
 }
 function drawArrow(r, hover) {
-  const cx = r.x + r.w / 2, cy = r.y + r.h / 2, s = hover ? 1.15 : 1, bob = Math.sin(G.t * 5) * 6;
-  ctx.save(); ctx.translate(cx + (r.dir === 'left' ? -bob : r.dir === 'right' ? bob : 0), cy + (r.dir === 'down' ? bob : r.dir === 'up' ? -bob : 0));
-  ctx.rotate(r.dir === 'down' ? Math.PI / 2 : r.dir === 'up' ? -Math.PI / 2 : r.dir === 'left' ? Math.PI : 0); ctx.scale(s, s);
-  ctx.beginPath(); ctx.moveTo(-46, -18); ctx.lineTo(8, -18); ctx.lineTo(8, -44); ctx.lineTo(52, 0); ctx.lineTo(8, 44); ctx.lineTo(8, 18); ctx.lineTo(-46, 18); ctx.closePath();
-  const g = ctx.createLinearGradient(-46, 0, 52, 0); g.addColorStop(0, '#e46a3c'); g.addColorStop(1, '#d6332a');
-  ctx.fillStyle = g; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
-  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5; ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
+  const s = hover ? 1.15 : 1, bob = Math.sin(G.t * 5) * 6;
+  const off = { left: [-bob, 0], right: [bob, 0], fwd: [0, -bob], back: [0, bob * 0.6] }[r.dir];
+  ctx.save(); ctx.translate(r.cx + off[0], r.cy + off[1]); ctx.scale(s, s);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const red = ctx.createLinearGradient(-50, -50, 50, 50); red.addColorStop(0, '#ee7a44'); red.addColorStop(1, '#d6332a');
+  if (r.dir === 'back') {
+    // mũi tên chữ U: quay lại chỗ trước
+    const path = () => { ctx.beginPath(); ctx.moveTo(36, 34); ctx.lineTo(36, -4); ctx.arc(0, -4, 36, 0, Math.PI, true); ctx.lineTo(-36, 6); };
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5;
+    path(); ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 32; ctx.stroke(); ctx.shadowColor = 'transparent';
+    path(); ctx.strokeStyle = red; ctx.lineWidth = 20; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-64, 2); ctx.lineTo(-8, 2); ctx.lineTo(-36, 44); ctx.closePath();
+    ctx.fillStyle = red; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6; ctx.fill(); ctx.stroke();
+  } else {
+    ctx.rotate({ fwd: -Math.PI / 2, left: Math.PI, right: 0 }[r.dir]);
+    ctx.beginPath(); ctx.moveTo(-46, -18); ctx.lineTo(8, -18); ctx.lineTo(8, -44); ctx.lineTo(52, 0); ctx.lineTo(8, 44); ctx.lineTo(8, 18); ctx.lineTo(-46, 18); ctx.closePath();
+    ctx.fillStyle = red; ctx.strokeStyle = '#1b1b1b'; ctx.lineWidth = 6;
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowOffsetX = 5; ctx.shadowOffsetY = 5; ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawHover(s) {
+  // viền mảnh, sáng nhẹ, bo theo vật
+  const p = 0.6 + 0.25 * Math.sin(G.t * 5), pad = 6;
+  ctx.save(); ctx.beginPath();
+  if (s.shape === 'ellipse') ctx.ellipse(s.x + s.w / 2, s.y + s.h / 2, s.w / 2 + pad, s.h / 2 + pad, 0, 0, Math.PI * 2);
+  else ctx.roundRect(s.x - pad, s.y - pad, s.w + pad * 2, s.h + pad * 2, Math.min(28, s.w / 4, s.h / 4));
+  ctx.fillStyle = 'rgba(255,248,225,.07)'; ctx.fill();
+  ctx.shadowColor = 'rgba(255,236,190,.9)'; ctx.shadowBlur = 16;
+  ctx.strokeStyle = `rgba(255,248,225,${p})`; ctx.lineWidth = 2.5; ctx.stroke();
   ctx.restore();
 }
 function render() {
@@ -716,11 +784,8 @@ function render() {
     const d = IMG.dai, h = v.dai.h, w = d.width * h / d.height;
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 30; ctx.drawImage(d, v.dai.x - w / 2, H - h + 40, w, h); ctx.restore();
   }
-  if (G.hover && canInteract()) {
-    const s = G.hover, p = 0.55 + 0.45 * Math.sin(G.t * 6);
-    ctx.save(); ctx.strokeStyle = `rgba(231,184,90,${p})`; ctx.lineWidth = 5; ctx.setLineDash([16, 10]); ctx.strokeRect(s.x, s.y, s.w, s.h); ctx.restore();
-  }
-  if (G.mode === 'play' && !G.dlg) for (const r of arrowRects()) drawArrow(r, G.hoverArrow && G.hoverArrow.dir === r.dir);
+  if (G.hover && canInteract()) drawHover(G.hover);
+  if (G.mode === 'play' && !G.dlg) for (const r of arrowRects()) drawArrow(r, G.hoverArrow && G.hoverArrow.cx === r.cx && G.hoverArrow.cy === r.cy);
   if (G.alarm) { ctx.fillStyle = `rgba(200,30,30,${0.07 + 0.05 * Math.sin(G.t * 8)})`; ctx.fillRect(0, 0, W, H); }
 }
 function updHUD() {

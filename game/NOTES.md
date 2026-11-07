@@ -2,7 +2,7 @@
 
 Bản chơi thử: https://call-from-cambodia.vercel.app/ (Vercel tự deploy mỗi khi push lên `main`, phục vụ thư mục `game/`).
 
-Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ vật để tương tác và click mũi tên đỏ để đổi góc nhìn. Toàn bộ art, UI và cutscene lấy từ `source/Game of Thiên Duyên` (thư mục này không đưa lên git vì nặng 1.2GB).
+Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ vật để tương tác. Mũi tên đỏ hướng lên nghĩa là đi tới chỗ đó (đặt ngay cửa hoặc bàn), mũi tên trái/phải ở mép màn hình là quay sang hướng đó, mũi tên chữ U ở giữa đáy là quay lại. Rê chuột lên mũi tên sẽ hiện tên nơi sẽ tới. Toàn bộ art, UI và cutscene lấy từ `source/Game of Thiên Duyên` (thư mục này không đưa lên git vì nặng 1.2GB).
 
 ## Cấu trúc
 - `index.html`, `style.css`, `game.js`: toàn bộ code, không cần build.
@@ -25,7 +25,7 @@ office ─┬─ desk (sổ St5K) ── pc (KICH_BAN, DANH_SACH, HO_SO_MAT khó
                                 │                                      └─ bossRight (đầu hươu, chùm chìa khóa giấu trong miệng)
                                 └─ cellDoor (keypad 2042K = giấy 20 + đồng hồ 4 + ly 2 + chữ K) ── cells (cửa 603 ở cuối hành lang, chiếu cut3, rồi Mission Complete, rồi The End)
 ```
-Tọa độ điểm click nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh.
+Tọa độ điểm click (`spots`) và mũi tên (`nav`) nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh. Ở góc nhìn văn phòng có biển "MÁY 04 · CHỖ CỦA TÍ" chỉ bàn an toàn.
 
 ## Anh Đại đi tuần
 Lộ trình: phòng ông trùm, hành lang, phòng làm việc, hành lang, lặp lại. Trước khi ổng tới khu vực bạn đang đứng khoảng 4 giây sẽ có cảnh báo tiếng bước chân. Đứng ở góc nhìn `desk` hoặc `pc` (bàn máy số 4) thì an toàn. Ở các góc khác, thanh nghi ngờ sẽ tăng. Đầy thanh thì chiếu cut2 và mất 1 mạng. Mất đủ 3 mạng là thua. Lấy được chìa khóa thì có 60 giây.
