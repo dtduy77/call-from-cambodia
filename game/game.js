@@ -276,38 +276,39 @@ function nextLine() {
 }
 ui.dialog.addEventListener('pointerdown', e => { e.stopPropagation(); nextLine(); });
 const L = {
-  gate1: { who: 'ti', v: 'gate1_ti', text: 'Đây rồi. Theo tin báo, An Yên bị giam trong khu nhà này.' },
-  gate2: { who: 'ti', v: 'gate2_ti', text: 'Cứ giả làm người đi xin việc. Vào được bên trong rồi tính tiếp.' },
-  notyet: { who: 'ti', v: 'notyet_ti', text: 'Chưa được. An Yên vẫn còn ở trong đó.' },
-  wake: { who: 'dai', v: 'wake_dai', text: 'Tỉnh rồi hả? Từ giờ mày là người của tao.' },
-  intro: { who: 'dai', v: 'intro_dai', text: 'Mày vào ngồi ở máy 04, lo mà làm đi nếu không muốn bị chích điện.' },
-  endure: { who: 'ti', v: 'endure_ti', text: '(Phải nhịn. Vào văn phòng, tìm cách mở máy 04 trước đã.)' },
-  watch: { who: 'ti', v: 'watch_ti', text: 'Anh Đại đang để mắt tới mình. Phải vào máy 04 trước, đừng để bị nghi.' },
-  note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ của người ngồi bàn này. Mẩu giấy dán ghi: St5K.' },
-  note2: { who: 'ti', v: 'note2_ti', text: 'Có khi là mật khẩu của thư mục trong máy 04?' },
-  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy này đã tắt. Mấy tờ giấy dán đầy những số điện thoại lạ.' },
-  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Sai rồi. Mật khẩu chắc ghi đâu đó quanh bàn này.' },
-  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi! Hồ sơ của An Yên... cô ấy bị nhốt ở buồng cuối dãy phòng giam.' },
-  pcopen2: { who: 'ti', v: 'pcopen2_ti', text: 'Còn đây là ghi chú mã cửa khu giam. Thêm nữa, chìa khóa buồng do anh Đại giữ trong phòng riêng.' },
-  board: { who: 'ti', v: 'board_ti', text: 'Bảng ghim toàn ảnh thẻ của những người làm ở đây. Có cả ảnh An Yên.' },
-  clock: { who: 'ti', v: 'clock_ti', text: 'Đồng hồ này hỏng. Kim giây cứ giật mãi ở số 4, ai đó còn tô xanh con số.' },
-  paper: { who: 'ti', v: 'paper_ti', text: 'Một mẩu giấy vò nát trong thùng rác. Số 20 được viết bằng mực xanh.' },
-  cup: { who: 'ti', v: 'cup_ti', text: 'Ly giấy có số 2 viết bằng mực xanh. Giống nét chữ trên mẩu giấy số 20.' },
-  k: { who: 'ti', v: 'k_ti', text: 'Chữ K trong "KPI" được tô vàng đậm hơn hẳn. Lại một manh mối nữa.' },
-  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa bằng mã. Ghi chú trong hồ sơ có nói cách ghép mã.' },
-  kpok: { who: 'ti', v: 'kpok_ti', text: 'Bảng điện tử kêu "bíp". Song sắt từ từ kéo lên.' },
-  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Sai mã rồi. Xem lại thứ tự trong ghi chú.' },
-  skull: { who: 'ti', v: 'skull_ti', text: 'Có thứ gì đó lủng lẳng trong miệng cái đầu hươu...' },
-  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa giấu trong miệng đầu hươu! Chắc chắn có chìa buồng giam.' },
-  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em! Chìa khóa do anh Đại giữ, cất trong phòng riêng!' },
-  wrongcell: { who: 'ti', v: 'wrongcell_ti', text: 'Không phải buồng này. An Yên ở buồng cuối dãy.' },
-  yen1: { who: 'yen', v: 'yen1_yen', text: 'Anh... anh đến cứu em thật sao?' },
-  ti1: { who: 'ti', v: 'ti1_ti', text: 'Anh là Tí, công an. Gia đình em đã báo tin. Mình phải đi ngay.' },
-  yen2: { who: 'yen', v: 'yen2_yen', text: 'Em tưởng sẽ không bao giờ được về nhà nữa...' },
-  ti2: { who: 'ti', v: 'ti2_ti', text: 'Bám sát anh. Ra khỏi cổng là an toàn.' },
-  caught: { who: 'dai', v: 'caught_dai', text: 'Lảng vảng làm gì đó hả? Ăn điện nè!' },
-  afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Về chỗ ngồi chạy KPI cho tao!' },
-  gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nha. Mày ở lại đây luôn đi!' },
+  gate1: { who: 'ti', v: 'gate1_ti', text: 'Tới rồi nè! Theo tin báo, con nhỏ An Yên bị nhốt trong cái khu này nè bà con.' },
+  gate2: { who: 'ti', v: 'gate2_ti', text: 'Giả bộ đi xin việc cái đã. Dzô được bên trong rồi tính tiếp, lo gì!' },
+  notyet: { who: 'ti', v: 'notyet_ti', text: 'Dìa gì mà dìa! An Yên còn kẹt trong đó kìa cha nội.' },
+  wake: { who: 'dai', v: 'wake_dai', text: 'Ê, tỉnh rồi hả mậy? Từ bữa nay mầy là người của tao nghen!' },
+  intro: { who: 'dai', v: 'intro_dai', text: 'Dzô ngồi máy 04 mần cho đàng hoàng. Lười là tao chích điện cho tóc dựng đứng luôn á!' },
+  endure: { who: 'ti', v: 'endure_ti', text: '(Nhịn... nhịn... một điều nhịn chín điều lành. Dzô văn phòng mở máy 04 cái đã.)' },
+  watch: { who: 'ti', v: 'watch_ti', text: 'Ổng đang ngó mình chằm chằm kìa trời. Dzô máy 04 trước, lộn xộn là ăn điện à nghen.' },
+  good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi im mần vậy mới ngoan nghen.' },
+  note: { who: 'ti', v: 'note_ti', text: 'Cha, cuốn sổ của ai mà dán mật khẩu chình ình: St5K. Bảo mật dữ thần!' },
+  note2: { who: 'ti', v: 'note2_ti', text: 'Chắc là mật khẩu thư mục trong máy 04 chớ gì nữa. Hên quá xá!' },
+  desk2: { who: 'ti', v: 'desk2_ti', text: 'Máy này tắt ngúm rồi. Dán đầy số điện thoại lạ hoắc, coi bộ toàn nạn nhân hông hà.' },
+  pcwrong: { who: 'ti', v: 'pcwrong_ti', text: 'Trật lất rồi! Mật khẩu chắc ghi đâu quanh bàn này thôi, kiếm lại coi.' },
+  pcopen: { who: 'ti', v: 'pcopen_ti', text: 'Mở được rồi bà con ơi! An Yên bị nhốt ở buồng cuối dãy phòng giam.' },
+  pcopen2: { who: 'ti', v: 'pcopen2_ti', text: 'Có ghi chú cách ghép mã cửa nữa nè. Còn chìa khóa thì ông Đại giữ trong phòng riêng, khó ăn à nghen.' },
+  board: { who: 'ti', v: 'board_ti', text: 'Bảng ghim toàn ảnh thẻ mấy người làm ở đây. Ủa, có cả ảnh An Yên nè!' },
+  clock: { who: 'ti', v: 'clock_ti', text: 'Đồng hồ hư rồi, kim giây cứ giựt giựt ở số 4. Còn ai tô xanh lè con số nữa chớ.' },
+  paper: { who: 'ti', v: 'paper_ti', text: 'Lục thùng rác ra mẩu giấy ghi số 20 mực xanh. Đi điều tra mà như đi lượm ve chai!' },
+  cup: { who: 'ti', v: 'cup_ti', text: 'Cái ly có số 2 mực xanh nè. Nét chữ y chang mẩu giấy số 20 luôn.' },
+  k: { who: 'ti', v: 'k_ti', text: 'Chữ K trong "KPI" tô vàng chóe vậy ai mà hổng thấy. Thêm một manh mối nữa rồi!' },
+  doorlocked: { who: 'ti', v: 'doorlocked_ti', text: 'Cửa khóa mã rồi. Coi lại ghi chú trong hồ sơ coi ghép mã sao.' },
+  kpok: { who: 'ti', v: 'kpok_ti', text: 'Bíp một cái, song sắt kéo lên từ từ. Ngon lành cành đào!' },
+  kpwrong: { who: 'ti', v: 'kpwrong_ti', text: 'Bíp bíp! Trật rồi. Bình tĩnh, coi lại thứ tự trong ghi chú.' },
+  skull: { who: 'ti', v: 'skull_ti', text: 'Cái đầu hươu này ngậm cái gì lủng lẳng trong miệng kìa...' },
+  key: { who: 'ti', v: 'keys_ti', text: 'Chùm chìa khóa nè! Giấu trong miệng đầu hươu, ông Đại cũng sáng tạo dữ ha.' },
+  nokey: { who: 'yen', v: 'nokey_yen', text: 'Anh ơi cứu em dới! Chìa khóa ông Đại giữ, cất trong phòng riêng ổng á!' },
+  wrongcell: { who: 'ti', v: 'wrongcell_ti', text: 'Hông phải buồng này. An Yên ở buồng cuối dãy lận.' },
+  yen1: { who: 'yen', v: 'yen1_yen', text: 'Anh... anh tới cứu em thiệt hả anh?' },
+  ti1: { who: 'ti', v: 'ti1_ti', text: 'Anh là Tí, công an nè. Gia đình em báo tin rồi. Mình đi lẹ lẹ!' },
+  yen2: { who: 'yen', v: 'yen2_yen', text: 'Em tưởng hổng bao giờ được dìa nhà nữa chớ...' },
+  ti2: { who: 'ti', v: 'ti2_ti', text: 'Bám sát anh nghen. Ra khỏi cổng là an toàn!' },
+  caught: { who: 'dai', v: 'caught_dai', text: 'Ê ê, lảng vảng gì đó mậy? Ăn điện nè!' },
+  afterzap: { who: 'dai', v: 'afterzap_dai', text: 'Dìa chỗ ngồi chạy KPI cho tao, lẹ!' },
+  gameover: { who: 'dai', v: 'gameover_dai', text: 'Ba lần rồi đó nghen. Thôi ở lại đây với tao luôn đi mậy!' },
 };
 
 /* ---------------- Inventory ---------------- */
@@ -468,7 +469,7 @@ function updDetect(dt) {
   if (present && G.grace <= 0) {
     let r = SAFE.has(G.view) ? -40 : here === 'boss' ? 55 : 24;
     if (r > 0 && G.overlay && G.overlay !== 'pc') r += 15;
-    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('Anh Đại: "Ừ, làm vậy mới ngoan."'); }
+    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('Anh Đại: "' + L.good.text + '"'); }
     G.det = clamp(G.det + r * dt, 0, 100);
   } else G.det = Math.max(0, G.det - 15 * dt);
   G.hbT -= dt;

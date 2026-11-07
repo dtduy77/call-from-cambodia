@@ -11,7 +11,7 @@ Game là escape room góc nhìn thứ nhất. Người chơi click vào đồ v�
 - `assets/v2/ui/`: menu, options, sound, tutorial, quit, pause, the end, khung thoại.
 - `assets/v2/chars/`: Anh Đại, An Yên (hiện khi họ nói), Tí (chưa dùng vì góc nhìn thứ nhất).
 - `assets/v2/video/`: cut1 (nhận nhiệm vụ), cut2 (bị chích điện), cut3 (giải cứu). Đã chuyển sang H.264 720p.
-- `assets/v2/voice/`: 32 câu thoại có giọng, tạo bằng giọng Linh của macOS rồi đổi cao độ. Muốn thay bằng giọng thu âm thật thì giữ nguyên tên file.
+- `assets/v2/voice/`: 33 câu thoại giọng máy (giọng Linh của macOS, giọng Bắc, đã đổi cao độ). Giọng miền Tây thật thì thu theo `VOICE_SCRIPT.md` rồi thay file cùng tên.
 
 ## Bản đồ góc nhìn
 ```
