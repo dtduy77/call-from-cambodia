@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261108b';
+const ASSET_V = '20261108c';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -35,7 +35,7 @@ const IMG_SRC = {
 function loadAssets(onProgress) {
   const extra = ['props/binder.png', 'props/clock.png', 'props/paper20.png', 'props/k.png', 'props/cup.png', 'chars/yen.png',
     'ui/box_ti.png', 'ui/box_dai.png', 'ui/box_yen.png', 'ui/menu_bg.jpg', 'ui/logo.png', 'ui/start.png', 'ui/start_h.png', 'ui/option.png', 'ui/option_h.png',
-    'ui/opt_bg.jpg', 'ui/opt_panel.webp', 'ui/snd_panel.webp', 'ui/tut_panel.webp', 'ui/quit_panel.webp', 'ui/pause_panel.webp', 'ui/end_bg.jpg', 'ui/end_title.png', 'ui/mission.jpg'];
+    'ui/opt_bg.jpg', 'ui/opt_panel.webp', 'ui/snd_panel.webp', 'ui/tut_panel.webp', 'ui/quit_panel.webp', 'ui/pause_panel.webp', 'ui/end_bg.jpg', 'ui/end_title.png', 'ui/mission.jpg', 'ui/hud_obj.png', 'ui/hud_inv.png', 'ui/hud_det.png', 'ui/pw_win.jpg', 'ui/profile_win.jpg'];
   const outl = Object.keys(typeof OUTLINE === 'object' ? OUTLINE : {}).map(k => ['ol:' + k, A(`outline/${k}.png`)]);
   const all = [...Object.entries(IMG_SRC), ...extra.map(p => [p, A(p)]), ...outl];
   let done = 0;
@@ -348,10 +348,15 @@ const ITEMS = {
   paper: { img: 'props/paper20.png', t: '20', name: 'Giấy số 20' },
   key: { img: 'props/keys.png', t: '', name: 'Chùm chìa khóa' },
 };
+// vị trí 7 ô "?" vẽ sẵn trên bảng gỗ hud_inv.png (925px rộng): ô trống để lộ dấu ? của hình, ô có đồ thì phủ lên
+const SLOT_X = [139, 234, 335, 430, 527, 624, 723];
 function renderInv() {
-  ui.inv.innerHTML = `<div class="lbl">ĐỒ ĐÃ LƯỢM</div><div class="slots">` + Object.entries(ITEMS).map(([id, it]) => has(id)
-    ? `<div class="slot" title="${it.name}"><img class="${id === 'file' ? 'photo' : ''}" src="${A(it.img)}" alt="">${it.t ? `<span class="t">${it.t}</span>` : ''}</div>`
-    : `<div class="slot empty" title="Chưa có">?</div>`).join('') + '</div>';
+  ui.inv.innerHTML = Object.entries(ITEMS).map(([id, it], i) => {
+    const pos = `style="left:${(SLOT_X[i] / 925 * 100).toFixed(2)}%"`;
+    return has(id)
+      ? `<div class="slot full" ${pos} title="${it.name}"><img class="${id === 'file' ? 'photo' : ''}" src="${A(it.img)}" alt="">${it.t ? `<span class="t">${it.t}</span>` : ''}</div>`
+      : `<div class="slot empty" ${pos} title="Chưa có"></div>`;
+  }).join('');
 }
 const ZOOM = { note: 'props/binder.png', clock: 'props/clock.png', paper: 'props/paper20.png', cup: 'props/cup.png', k: 'props/k.png', key: 'props/keys.png' };
 function collect(id) {
@@ -393,20 +398,25 @@ function openFolder(f) {
   };
   ui.overlay.onpointerdown = e => { if (e.target === ui.overlay) closeOverlay(); };
   if (f === 'hoso') {
-    if (G.flags.folder) return win('HỒ SƠ MẬT', profileHTML());
-    const wb = win('NHẬP MẬT KHẨU', `Thư mục được bảo vệ. Nhập mật khẩu:<br><input id="pw" maxlength="8" autocomplete="off" spellcheck="false"><button id="pwok">MỞ</button><div id="pwmsg"></div>`);
-    const inp = wb.querySelector('#pw'); setTimeout(() => inp.focus(), 50);
+    if (G.flags.folder) return showProfile();
+    // hộp mật khẩu "SecretFolder" nhóm vẽ (source/icon/password.jpg): ô nhập, OK, Cancel, X đặt đúng chỗ trên hình
+    ui.overlay.innerHTML = `<div class="imgwin pwwin"><img src="${A('ui/pw_win.jpg')}" alt="SecretFolder: nhập mật khẩu">
+      <input id="pw" maxlength="8" autocomplete="off" spellcheck="false" aria-label="Mật khẩu">
+      <button class="hot pw-ok" title="OK"></button><button class="hot pw-cancel" title="Cancel"></button><button class="hot pw-x" title="Đóng"></button>
+      <div id="pwmsg"></div></div>`;
+    const w = ui.overlay.querySelector('.imgwin'), inp = w.querySelector('#pw'); setTimeout(() => inp.focus(), 50);
+    w.querySelector('.pw-cancel').onclick = w.querySelector('.pw-x').onclick = () => closeOverlay();
     const submit = () => {
       if (inp.value.trim().toLowerCase() === 'st5k') {
         SFX.ok(); G.flags.folder = true; G.inv.add('file'); renderInv();
-        wb.innerHTML = profileHTML(); ui.overlay.querySelector('.tb span').textContent = 'HỒ SƠ MẬT'; dialog([L.pcopen, L.pcopen2]);
+        showProfile(); dialog([L.pcopen, L.pcopen2]);
       } else {
-        SFX.wrong(); wb.querySelector('#pwmsg').innerHTML = '<span class="err">Sai mật khẩu!</span>';
-        const w = ui.overlay.querySelector('.pcwin'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
+        SFX.wrong(); w.querySelector('#pwmsg').textContent = 'Sai mật khẩu!';
+        w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
         inp.select(); if (!G.flags.saidWrong) { G.flags.saidWrong = true; dialog([L.pcwrong], () => inp.focus()); }
       }
     };
-    wb.querySelector('#pwok').onclick = submit;
+    w.querySelector('.pw-ok').onclick = submit;
     inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key.length === 1 || e.key === 'Backspace') SFX.key(); if (e.key === 'Enter') submit(); if (e.key === 'Escape') closeOverlay(); });
   } else if (f === 'kichban') {
     win('KỊCH BẢN GỌI ĐIỆN', `Bước 1: Xưng là nhân viên ngân hàng / công an / bưu điện.<br>Bước 2: Báo "tài khoản có dấu hiệu bất thường" hoặc "trúng thưởng".<br>Bước 3: Hối thúc, đe dọa, không cho nạn nhân thời gian suy nghĩ.<br>Bước 4: Yêu cầu chuyển tiền vào "tài khoản an toàn".<br><br><span class="hl">(Tí: Nhớ kỹ. Ra ngoài phải cảnh báo mọi người.)</span>`);
@@ -416,10 +426,15 @@ function openFolder(f) {
     win('THÙNG RÁC', 'Trống rỗng. Ai đó đã xóa sạch dấu vết.');
   }
 }
-function profileHTML() {
-  return `<div class="profile"><div class="ph" style="background-image:url(${A('chars/yen.png')})"></div>
-    <div>HỒ SƠ: <b>NGUYEN AN YEN</b> — mã 01<br>Tình trạng: không chịu làm việc, KPI 6% — <span class="err">FAILED</span><br>Xử lý: nhốt <span class="hl"><b>BUỒNG CUỐI DÃY</b></span> khu giam.</div></div>
-    <div style="margin-top:10px">GHI CHÚ AN NINH — MÃ CỬA KHU GIAM:<br><span class="hl">[số trên mẩu giấy trong thùng rác] + [số kim đồng hồ văn phòng] + [số trên ly nước hành lang] + [chữ cái tô vàng trên bảng KPI]</span><br><br>Chìa khóa các buồng: anh Đại giữ, cất trong phòng riêng.</div>`;
+// hồ sơ An Yên nhóm vẽ (source/icon/thong tin.jpg, đã sửa P.605 thành P.603 cho khớp phòng giam) + ảnh An Yên vào ô trắng
+// + tờ note dán cạnh ghi cách ghép mã cửa khu giam và chỗ giấu chìa khóa
+function showProfile() {
+  G.overlay = 'pc'; ui.overlay.className = 'pc';
+  ui.overlay.innerHTML = `<div class="imgwin pfwin"><img src="${A('ui/profile_win.jpg')}" alt="Hồ sơ Nguyen An Yen: NOT PASS, phòng P.603">
+      <div class="pf-photo" style="background-image:url(${A('chars/yen.png')})"></div><button class="hot pf-x" title="Đóng"></button></div>
+    <div class="secnote"><b>GHI CHÚ AN NINH</b> · Mã cửa khu giam =<br>số trên mẩu giấy thùng rác + số kim đồng hồ văn phòng<br>+ số trên ly nước hành lang + chữ tô vàng trên bảng KPI<br><i>Chìa khóa buồng: anh Đại cất trong phòng riêng.</i></div>`;
+  ui.overlay.querySelector('.pf-x').onclick = () => closeOverlay();
+  ui.overlay.onpointerdown = e => { if (e.target === ui.overlay) closeOverlay(); };
 }
 
 /* --- Keypad of the prison door --- */

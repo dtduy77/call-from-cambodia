@@ -8,7 +8,7 @@ Game là escape room góc nhìn thứ nhất. Người chơi bấm mũi tên đ�
 - `index.html`, `style.css`, `game.js`: toàn bộ code, không cần build.
 - `assets/v2/rooms/`: 14 góc nhìn, ảnh 1920x1080.
 - `assets/v2/props/`: đồ vật đã tách nền, dùng khi phóng to đồ vật và trong ô đồ.
-- `assets/v2/ui/`: menu, options, sound, tutorial, quit, pause, the end, khung thoại.
+- `assets/v2/ui/`: menu, options, sound, tutorial, quit, pause, the end, khung thoại; 3 tấm bảng gỗ HUD (`hud_obj/inv/det.png`), hộp mật khẩu `pw_win.jpg` và hồ sơ An Yên `profile_win.jpg` lấy từ `source/icon` (hồ sơ gốc ghi P.605, đã sửa thành P.603 cho khớp cảnh phòng giam).
 - `assets/v2/chars/`: Anh Đại, An Yên (hiện khi họ nói), Tí (chưa dùng vì góc nhìn thứ nhất).
 - `assets/v2/video/`: cut1 (nhận nhiệm vụ), cut2 (bị chích điện), cut3 (giải cứu). Đã chuyển sang H.264 720p.
 - `assets/v2/voice/`: 33 câu thoại tạo bằng VieNeu-TTS v3 Turbo (Apache-2.0, chạy offline): Tí = giọng Adam (Nam, nâng tông 12%), Anh Đại = Đức Trí (Nam, trầm), An Yên = Thục Đoan (nữ Nam). Thay bằng giọng thu thật thì làm theo `VOICE_SCRIPT.md`.
