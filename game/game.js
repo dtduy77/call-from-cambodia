@@ -160,7 +160,7 @@ const BK = (to, label = 'Quay lại') => ({ dir: 'back', x: 962, y: 990, to, lab
 const afterFolder = { cond: () => !!G.flags.folder };
 const VIEWS = {
   gate: { nav: [AR(230, 609, 180, () => dialog([L.notyet]), 'Bỏ về'), AR(960, 679, -90, () => enterCompound(), 'Vào khu nhà')], spots: [] }, // prototype f04: ← bỏ về, ↑ đi vào, không viền cổng
-  hall: { dai: { x: 930, h: 720 }, nav: [AR(1563, 532, -29, 'hallOffice', 'Văn phòng (máy 04)'), AR(1208, 583, -56, 'hallKPI', 'Bảng KPI · cửa gỗ', afterFolder), AR(611, 686, -145, 'hallWater', 'Máy lọc nước', afterFolder), AR(829, 616, -90, 'cellDoor', 'Cửa phòng giam (CELL)', afterFolder)], spots: [
+  hall: { nav: [AR(1563, 532, -29, 'hallOffice', 'Văn phòng (máy 04)'), AR(1208, 583, -56, 'hallKPI', 'Bảng KPI · cửa gỗ', afterFolder), AR(611, 686, -145, 'hallWater', 'Máy lọc nước', afterFolder), AR(829, 616, -90, 'cellDoor', 'Cửa phòng giam (CELL)', afterFolder)], spots: [
     { x: 280, y: 237, w: 168, h: 215, label: 'Máy lọc nước', go: 'hallWater', lock: true }, // chỉ bình nước, không gồm kệ
     { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
     { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
@@ -492,7 +492,7 @@ function updDetect(dt) {
   if (present && G.grace <= 0) {
     let r = SAFE.has(G.view) ? -40 : here === 'boss' ? 55 : 24;
     if (r > 0 && G.overlay && G.overlay !== 'pc') r += 15;
-    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('ANH ĐẠI: "' + L.good.text.toUpperCase() + '"'); }
+    if (SAFE.has(G.view) && !D.greeted) { D.greeted = true; playVoice('good_dai'); toast('ANH ĐẠI: "' + L.good.text + '"'); }
     G.det = clamp(G.det + r * dt, 0, 100);
   } else G.det = Math.max(0, G.det - 15 * dt);
   G.hbT -= dt;

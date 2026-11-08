@@ -156,4 +156,3 @@ button{font-family:inherit;cursor:pointer}
 #load-bar{width:600px;height:26px;border:4px solid #e2cbb2}
 #load-fill{height:100%;width:0;background:#e7b85a}
 /* Anh Đại nói chữ in hoa như deck (slide 46) */
-#dialog.fig-left #d-text{text-transform:uppercase;letter-spacing:.01em}
