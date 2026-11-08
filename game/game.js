@@ -137,7 +137,7 @@ const fmt = s => { s = Math.max(0, Math.ceil(s)); return String(Math.floor(s / 6
 /* ---------------- Game state ---------------- */
 const G = { mode: 'loading' };
 const D = {};
-const AREA = { office: 'office', desk: 'office', desk2: 'office', pc: 'office', corner: 'office', hallOffice: 'hall', hall: 'hall', hallWater: 'hall', hallKPI: 'hall', cellDoor: 'hall', boss: 'boss', bossLeft: 'boss', bossRight: 'boss', cells: 'cells', gate: 'outside' };
+const AREA = { office: 'office', desk: 'office', other1: 'office', other2: 'office', other3: 'office', desk2: 'office', pc: 'office', corner: 'office', hallOffice: 'hall', hall: 'hall', hallWater: 'hall', hallKPI: 'hall', cellDoor: 'hall', boss: 'boss', bossLeft: 'boss', bossRight: 'boss', cells: 'cells', gate: 'outside' };
 const SAFE = new Set(['pc']); // ngồi đúng máy 04 thì an toàn
 const ROUTE = ['boss', 'hall', 'office', 'hall'];
 const STAY = { boss: 14, hall: 7, office: 9 };
@@ -160,6 +160,10 @@ const has = id => G.inv.has(id);
 const AR = (x, y, ang, to, label, o = {}) => ({ dir: 'ang', ang, x, y, to, label, ...o });
 const BK = (to, label = 'Quay lại') => ({ dir: 'back', x: 962, y: 990, to, label });
 const afterFolder = { cond: () => !!G.flags.folder };
+// cảnh bàn dán giấy note: dùng chung cho desk (từ máy 04) và other1..3 (3 máy còn lại trong văn phòng)
+const DESK_SPOTS = [
+  { x: 195, y: 90, w: 650, h: 550, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
+];
 const VIEWS = {
   gate: { nav: [AR(230, 609, 180, () => dialog([L.notyet]), 'Bỏ về'), AR(960, 679, -90, () => enterCompound(), 'Vào khu nhà')], spots: [] }, // prototype f04: ← bỏ về, ↑ đi vào, không viền cổng
   hall: { nav: [AR(1563, 532, -29, 'hallOffice', 'Văn phòng (máy 04)'), AR(1208, 583, -56, 'hallKPI', 'Bảng KPI · cửa gỗ', afterFolder), AR(611, 686, -145, 'hallWater', 'Máy lọc nước', afterFolder), AR(829, 616, -90, 'cellDoor', 'Cửa phòng giam (CELL)', afterFolder)], spots: [
@@ -173,27 +177,28 @@ const VIEWS = {
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
   ] },
   // Văn phòng theo prototype Figma (f06 → f13): vào là ngồi ngay máy 04 của Tí;
-  // quay phải: bàn có cuốn sổ St5K (chỉ 1 cảnh); quay trái: toàn cảnh (slide 36) → góc bảng ghim.
-  // 3 máy còn lại trong văn phòng dẫn tới 1 cảnh duy nhất: bàn dán giấy note (desk), mũi tên trái về máy 04, phải qua bàn có cuốn sổ.
-  pc: { nav: [AR(228, 609, 180, 'office', 'Nhìn quanh văn phòng'), AR(1722, 590, 0, 'desk2', 'Bàn bên phải')], spots: [
+  // quay phải: bàn dán giấy note (slide 35) → bàn có cuốn sổ St5K; quay trái: toàn cảnh (slide 36) → góc bảng ghim.
+  // 3 máy còn lại trong văn phòng (other1..3) dùng chung 1 cảnh bàn dán giấy note: bấm phải 2 lần vẫn là cảnh đó.
+  pc: { nav: [AR(228, 609, 180, 'office', 'Nhìn quanh văn phòng'), AR(1722, 590, 0, 'desk', 'Bàn bên phải')], spots: [
     { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
     { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
     { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
     { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
-  desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn có cuốn sổ')], spots: [
-    { x: 195, y: 90, w: 650, h: 550, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
-  ] },
-  desk2: { nav: [AR(230, 608, 180, 'pc', 'Về máy 04')], spots: [
+  desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn kế tiếp')], spots: DESK_SPOTS },
+  other1: { img: 'desk', nav: [AR(1722, 590, 0, 'other2', 'Máy kế bên'), BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
+  other2: { img: 'desk', nav: [AR(228, 608, 180, 'other1', 'Máy trước'), AR(1722, 590, 0, 'other3', 'Máy kế bên'), BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
+  other3: { img: 'desk', nav: [AR(228, 608, 180, 'other2', 'Máy trước'), BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
+  desk2: { nav: [AR(230, 608, 180, 'desk', 'Quay lại')], spots: [
     { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
     { x: 1045, y: 495, w: 245, h: 270, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
   office: { dai: { x: 760, h: 880 }, nav: [AR(1369, 767, -57, 'corner', 'Góc bảng ghim · đồng hồ'), AR(795, 753, -90, 'hall', 'Ra hành lang')], spots: [
-    // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra góc xéo bàn bên
+    // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra cảnh bàn dán note (other1)
     { x: 235, y: 735, w: 300, h: 170, label: 'Máy số 4 (của mình)', go: 'pc' },
-    { x: 545, y: 735, w: 340, h: 170, label: 'Máy bàn khác', go: 'desk' },
-    { x: 1030, y: 735, w: 290, h: 170, label: 'Máy bàn khác', go: 'desk' },
-    { x: 1335, y: 735, w: 295, h: 170, label: 'Máy bàn khác', go: 'desk' },
+    { x: 545, y: 735, w: 340, h: 170, label: 'Máy bàn khác', go: 'other1' },
+    { x: 1030, y: 735, w: 290, h: 170, label: 'Máy bàn khác', go: 'other1' },
+    { x: 1335, y: 735, w: 295, h: 170, label: 'Máy bàn khác', go: 'other1' },
     { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
   ] },
   corner: { nav: [AR(228, 608, 180, 'office', 'Quay lại văn phòng'), AR(1041, 464, -68, () => collect('clock'), 'Đồng hồ', { cond: () => !has('clock') }), AR(1250, 848, -29, () => collect('paper'), 'Thùng rác', { cond: () => !has('paper') })], spots: [
@@ -777,7 +782,7 @@ function drawHover(s) {
   const p = 0.6 + 0.25 * Math.sin(G.t * 5), pad = 6;
   const idx = VIEWS[G.view].spots.indexOf(s);
   if (idx < 0) return;
-  const key = `${G.view}_${idx}`, im = IMG['ol:' + key];
+  const key = `${VIEWS[G.view].img || G.view}_${idx}`, im = IMG['ol:' + key];
   if (im && typeof OUTLINE === 'object' && OUTLINE[key]) {
     ctx.save(); ctx.globalAlpha = 0.55 + 0.45 * Math.sin(G.t * 5) ** 2;
     ctx.drawImage(im, OUTLINE[key][0], OUTLINE[key][1]); ctx.restore(); return;
@@ -794,7 +799,7 @@ function render() {
   ctx.setTransform(RS, 0, 0, RS, 0, 0); ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   if (G.mode !== 'play' && G.mode !== 'end') return;
-  const v = VIEWS[G.view], img = IMG[G.view];
+  const v = VIEWS[G.view], img = IMG[v.img || G.view];
   if (img) ctx.drawImage(img, 0, 0, W, H);
   if (v.draw) v.draw();
   // Anh Đại standing in the wide views of the area he is patrolling
