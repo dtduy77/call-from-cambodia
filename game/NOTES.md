@@ -18,8 +18,9 @@ Luồng theo prototype Figma (frame f04 → f56) và deck `source/cuoc goi tu ca
 ```
 cut1 → 2 câu thoại của Tí trên nền cổng (không chơi ở cổng) → cut2 (bị chích điện) → hall (Anh Đại giao việc)
 hall ─┬─ → hallOffice (cửa OFFICE, slide 33) ─↗─ pc (ngồi máy 04 của Tí, slide 34: KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC)
-      │                                           ├─ → desk (bàn dán giấy note, slide 35) ─ → desk2 (bàn có cuốn sổ St5K)
+      │                                           ├─ → desk2 (bàn có cuốn sổ St5K, ← về pc)
       │                                           └─ ← office (toàn cảnh, slide 36) ─┬─↗ corner (đồng hồ số 4, thùng rác số 20, slide 37)
+      │                                                                              ├─ 3 máy còn lại → desk (bàn dán giấy note, slide 35: ← pc, → desk2)
       │                                                                              └─↑ ra hall
       ├─ ← hallWater (ly số 2)
       ├─ ↑ hallKPI (chữ K) ─↑─ boss ─┬─ bossLeft

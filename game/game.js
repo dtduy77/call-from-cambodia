@@ -171,17 +171,18 @@ const VIEWS = {
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
   ] },
   // Văn phòng theo prototype Figma (f06 → f13): vào là ngồi ngay máy 04 của Tí;
-  // quay phải: bàn dán giấy note (slide 35) → bàn có cuốn sổ St5K; quay trái: toàn cảnh (slide 36) → góc bảng ghim.
-  pc: { nav: [AR(228, 609, 180, 'office', 'Nhìn quanh văn phòng'), AR(1722, 590, 0, 'desk', 'Bàn bên phải')], spots: [
+  // quay phải: bàn có cuốn sổ St5K (chỉ 1 cảnh); quay trái: toàn cảnh (slide 36) → góc bảng ghim.
+  // 3 máy còn lại trong văn phòng dẫn tới 1 cảnh duy nhất: bàn dán giấy note (desk), mũi tên trái về máy 04, phải qua bàn có cuốn sổ.
+  pc: { nav: [AR(228, 609, 180, 'office', 'Nhìn quanh văn phòng'), AR(1722, 590, 0, 'desk2', 'Bàn bên phải')], spots: [
     { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
     { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
     { x: 535, y: 322, w: 330, h: 64, label: 'HO_SO_MAT', act: () => openFolder('hoso') },
     { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
-  desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn kế tiếp')], spots: [
+  desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn có cuốn sổ')], spots: [
     { x: 195, y: 90, w: 650, h: 550, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
   ] },
-  desk2: { nav: [AR(230, 608, 180, 'desk', 'Quay lại')], spots: [
+  desk2: { nav: [AR(230, 608, 180, 'pc', 'Về máy 04')], spots: [
     { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
     { x: 1045, y: 495, w: 245, h: 270, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
