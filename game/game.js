@@ -163,8 +163,9 @@ const VIEWS = {
   hall: { nav: [AR(1563, 532, -29, 'hallOffice', 'Văn phòng (máy 04)'), AR(1208, 583, -56, 'hallKPI', 'Bảng KPI · cửa gỗ', afterFolder), AR(611, 686, -145, 'hallWater', 'Máy lọc nước', afterFolder), AR(829, 616, -90, 'cellDoor', 'Cửa phòng giam (CELL)', afterFolder)], spots: [
     { x: 280, y: 237, w: 168, h: 215, label: 'Máy lọc nước', go: 'hallWater', lock: true }, // chỉ bình nước, không gồm kệ
     { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
-    { x: 1102, y: 251, w: 294, h: 404, label: 'Bảng KPI và cửa gỗ', go: 'hallKPI', lock: true },
+    { x: 1108, y: 236, w: 142, h: 200, label: 'Bảng KPI', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
+    { x: 1264, y: 334, w: 110, h: 245, label: 'Cửa gỗ', go: 'hallKPI', lock: true }, // để cuối vì viền đánh số theo thứ tự (hall_4)
   ] },
   hallOffice: { dai: { x: 400, h: 860 }, nav: [AR(230, 610, 180, 'hall', 'Hành lang'), AR(1144, 915, -54, 'pc', 'Vào ngồi máy 04')], spots: [
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
@@ -178,11 +179,11 @@ const VIEWS = {
     { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
   desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn kế tiếp')], spots: [
-    { x: 235, y: 45, w: 640, h: 590, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
+    { x: 195, y: 90, w: 650, h: 550, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
   ] },
   desk2: { nav: [AR(230, 608, 180, 'desk', 'Quay lại')], spots: [
     { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
-    { x: 1045, y: 470, w: 215, h: 300, label: 'Cuốn sổ', act: () => collect('note') },
+    { x: 1045, y: 495, w: 245, h: 270, label: 'Cuốn sổ', act: () => collect('note') },
   ] },
   office: { dai: { x: 760, h: 880 }, nav: [AR(1369, 767, -57, 'corner', 'Góc bảng ghim · đồng hồ'), AR(795, 753, -90, 'hall', 'Ra hành lang')], spots: [
     // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra góc xéo bàn bên
