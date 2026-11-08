@@ -30,6 +30,7 @@ hall ─┬─ → hallOffice (cửa OFFICE, slide 33) ─↗─ pc (ngồi máy
 Trước khi mở được HO_SO_MAT, bấm máy lọc nước / CELL / KPI ở hành lang sẽ bị chặn ("Anh Đại đang để mắt tới mình").
 Chỗ an toàn khi Anh Đại đi tuần: ngồi đúng màn hình máy 04 (`pc`).
 Tọa độ điểm click (`spots`) và mũi tên (`nav`) nằm trong `VIEWS` ở `game.js`, tính theo hệ tọa độ 1920x1080 của ảnh.
+Khi thay ảnh/âm thanh mà giữ nguyên tên file, đổi `ASSET_V` ở đầu `game.js` (và `?v=` trong `index.html` nếu sửa code/CSS) để trình duyệt không dùng bản cũ trong cache.
 
 ## Anh Đại đi tuần
 Lộ trình: phòng ông trùm, hành lang, phòng làm việc, hành lang, lặp lại. Trước khi ổng tới khu vực bạn đang đứng khoảng 4 giây sẽ có cảnh báo tiếng bước chân. Ngồi ở màn hình máy 04 (`pc`) thì an toàn. Ở các góc khác, thanh nghi ngờ sẽ tăng. Đầy thanh thì chiếu cut2 và mất 1 mạng. Mất đủ 3 mạng là thua. Lấy được chìa khóa thì có 60 giây.
