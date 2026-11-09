@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261109b';
+const ASSET_V = '20261109c';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -201,18 +201,18 @@ const VIEWS = {
   ] },
   hallKPI: { nav: [AR(1139, 738, -90, 'boss', 'Phòng ông trùm', { sfx: 'door' }), BK('hall')], spots: [
     { x: 22, y: 76, w: 698, h: 491, label: 'Bảng KPI', act: () => collect('k') },
-    { x: 862, y: 76, w: 556, h: 760, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
+    { x: 864, y: 76, w: 556, h: 976, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
   ] },
   boss: { nav: [AR(612, 711, -144, 'bossLeft', 'Góc làm việc'), AR(1302, 701, -43, 'bossRight', 'Góc sofa'), BK('hallKPI', 'Ra hành lang')], spots: [
     { x: 33, y: 327, w: 665, h: 620, label: 'Góc làm việc', go: 'bossLeft' },
-    { x: 1222, y: 262, w: 560, h: 685, label: 'Góc sofa', go: 'bossRight' },
+    { x: 1340, y: 618, w: 580, h: 462, label: 'Góc sofa', go: 'bossRight' },
   ] },
   bossLeft: { nav: [AR(1672, 675, 0, 'bossRight', 'Góc sofa'), BK('boss')], spots: [] },
   bossRight: { nav: [AR(213, 650, 180, 'bossLeft', 'Góc làm việc'), BK('boss')], spots: [
     { x: 720, y: 60, w: 340, h: 420, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
   ] },
   cellDoor: { nav: [AR(814, 673, -119, () => cellDoorAct(), 'Vào phòng giam', { cond: () => !!G.flags.gate }), BK('hall')], spots: [
-    { x: 436, y: 120, w: 797, h: 700, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: () => cellDoorAct() },
+    { x: 444, y: 166, w: 788, h: 836, label: () => G.flags.gate ? 'Vào phòng giam' : 'Cửa phòng giam', act: () => cellDoorAct() },
     { x: 1385, y: 295, w: 360, h: 272, label: 'Bàn phím mật mã', act: () => openKeypad() },
   ], draw: drawCellBars },
   cells: { nav: [AR(493, 779, -120, () => cellAct(603), 'Buồng cuối dãy (603)'), BK('cellDoor')], spots: [
