@@ -1,6 +1,6 @@
 # Kịch bản thu âm lồng tiếng
 
-Thu bằng điện thoại, đặt đúng tên file (đuôi .mp3 hoặc đổi sang .mp3), bỏ vào `game/assets/v2/voice/` để thay giọng máy. Mỗi file chỉ 1 câu, cắt bớt khoảng lặng đầu và cuối.
+Giọng hiện tại: An Yên thu thật + clone, Anh Đại và Tí clone bằng G-OmniVoice từ file mẫu của nhóm (xem NOTES.md). Muốn thay câu nào bằng bản thu thật thì thu bằng điện thoại, đặt đúng tên file (đuôi .mp3 hoặc đổi sang .mp3), bỏ vào `game/assets/v2/voice/` để thay giọng máy. Mỗi file chỉ 1 câu, cắt bớt khoảng lặng đầu và cuối.
 
 | File | Nhân vật | Câu thoại |
 |---|---|---|

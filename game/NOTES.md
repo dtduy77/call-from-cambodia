@@ -11,7 +11,7 @@ Game là escape room góc nhìn thứ nhất. Người chơi bấm mũi tên đ�
 - `assets/v2/ui/`: menu, options, sound, tutorial, quit, pause, the end, khung thoại; 2 tấm bảng gỗ HUD (`hud_obj/inv.png`; `hud_det.png` mức nghi ngờ nhóm có vẽ nhưng không dùng nữa vì đã bỏ Anh Đại đi tuần), hộp mật khẩu `pw_win.jpg` và hồ sơ An Yên `profile_win.jpg` lấy từ `source/icon` (hồ sơ gốc ghi P.605, đã sửa thành P.603 cho khớp cảnh phòng giam).
 - `assets/v2/chars/`: Anh Đại, An Yên (chỉ hiện trong khung thoại khi họ nói), Tí (chưa dùng vì góc nhìn thứ nhất).
 - `assets/v2/video/`: cut1 (nhận nhiệm vụ), cut2 (bị chích điện, chỉ chiếu 1 lần ngay khi mở được HO_SO_MAT), cut3 (giải cứu). Đã chuyển sang H.264 720p.
-- `assets/v2/voice/`: 33 câu thoại tạo bằng VieNeu-TTS v3 Turbo (Apache-2.0, chạy offline): Tí = giọng Adam (Nam, nâng tông 12%), Anh Đại = Đức Trí (Nam, trầm), An Yên = Thục Đoan (nữ Nam). Thay bằng giọng thu thật thì làm theo `VOICE_SCRIPT.md`.
+- `assets/v2/voice/`: giọng đã chốt với nhóm. An Yên: yen1, yen2 là file thu thật (`source/voice yen`), nokey, yen3 clone từ giọng đó bằng G-OmniVoice (chạy trên máy). Anh Đại và Tí: clone bằng G-OmniVoice từ file mẫu nhóm gửi (`source/voice dai/Đường Cầu Vồng 3 12.m4a`, `source/voice ti/Đường Cầu Vồng 3 8.m4a`); riêng gate1_ti là chính file thu của Tí. Các câu không còn dùng (wake/good/caught/gameover của Đại, alo của Tí) vẫn là giọng VieNeu cũ.
 
 ## Bản đồ góc nhìn
 Luồng theo prototype Figma (frame f04 → f56) và deck `source/cuoc goi tu campuchia` (slide 24–40).

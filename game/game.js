@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261109a';
+const ASSET_V = '20261109b';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
