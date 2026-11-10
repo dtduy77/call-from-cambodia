@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110e';
+const ASSET_V = '20261110f';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -287,12 +287,12 @@ function nextLine() {
 ui.dialog.addEventListener('pointerdown', e => { e.stopPropagation(); nextLine(); });
 const L = {
   gate1: { who: 'ti', v: 'gate1_ti', text: 'Đây rồi. Theo tin báo, An Yên bị giam trong nhà này.' },
-  gate2: { who: 'ti', v: 'gate2_ti', text: 'Cứ giả làm người đi xin việc, vào được bên trong rồi tính tiếp.' },
+  gate2: { who: 'ti', v: 'gate2_ti', text: 'Cứ giả làm người đi xin việc,\nvào được bên trong rồi tính tiếp.' },
   notyet: { who: 'ti', v: 'notyet_ti', text: 'Chưa được, An Yên vẫn còn trong đó.' },
   wake: { who: 'dai', v: 'wake_dai', text: 'Tỉnh rồi hả? Từ nay mày làm cho tao. Ở đây tao nói gì nghe nấy, nghe chưa?' },
   art: { who: 'dai', v: 'art_dai', text: 'Nhớ nè: tất cả việc tụi mình đang làm hông phải lừa đảo. Đó là nghệ thuật thuyết phục!' },
   intro: { who: 'dai', v: 'intro_dai', text: 'Ra văn phòng ngồi máy 04 mà làm. Thấy lười là tao chích điện cho dựng tóc luôn á!' },
-  endure: { who: 'ti', v: 'endure_ti', text: '(Phải nhịn. Vào văn phòng tìm cách mở máy số 4 trước đã.)' },
+  endure: { who: 'ti', v: 'endure_ti', text: '(Phải nhịn. Vào văn phòng\ntìm cách mở máy số 4 trước đã.)' },
   watch: { who: 'ti', v: 'watch_ti', text: 'Anh Đại đang để mắt tới mình. Phải vào máy số 4 trước, đừng để bị nghi.' },
   good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi làm vậy mới ngoan nghen.' },
   note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ của người ngồi bàn này, mẩu giấy có ghi là St5K.' },
