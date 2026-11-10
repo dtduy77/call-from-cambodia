@@ -20,9 +20,9 @@ button{font-family:inherit;cursor:pointer}
 /* 3 tấm bảng gỗ nhóm vẽ (source/icon): tiêu đề, 7 ô "?" và thanh nghi ngờ có sẵn trong hình (925x450) */
 #obj,#inv{position:absolute;aspect-ratio:925/450;background:center/100% 100% no-repeat;filter:drop-shadow(5px 6px 0 rgba(0,0,0,.45))}
 #obj .lbl{display:none}
-#obj{left:10px;top:2px;width:330px;background-image:url(assets/v2/ui/hud_obj.png?v=20261110b)}
+#obj{left:10px;top:2px;width:330px;background-image:url(assets/v2/ui/hud_obj.png?v=20261110c)}
 #obj-text{position:absolute;left:15%;right:8%;top:44%;bottom:10%;font-weight:700;font-size:15px;line-height:1.2;color:#2b1d0e;display:flex;align-items:center}
-#inv{left:795px;top:2px;width:330px;background-image:url(assets/v2/ui/hud_inv.png?v=20261110b)}
+#inv{left:795px;top:2px;width:330px;background-image:url(assets/v2/ui/hud_inv.png?v=20261110c)}
 .slot{position:absolute;top:52.44%;width:9.51%;height:19.56%;display:flex;align-items:center;justify-content:center}
 .slot.full{background:#f6e7c1;border:2px solid #4a2c12;border-radius:3px;overflow:hidden}
 .slot img{max-width:88%;max-height:88%;object-fit:contain}

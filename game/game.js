@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110b';
+const ASSET_V = '20261110c';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -193,7 +193,7 @@ const VIEWS = {
   ] },
   corner: { nav: [AR(228, 608, 180, 'office', 'Quay lại văn phòng'), AR(1041, 464, -68, () => collect('clock'), 'Đồng hồ', { cond: () => !has('clock') }), AR(1250, 848, -29, () => collect('paper'), 'Thùng rác', { cond: () => !has('paper') })], spots: [
     { x: 268, y: 100, w: 576, h: 350, label: 'Bảng ghim', act: () => dialog([L.board]) },
-    { x: 980, y: 40, w: 300, h: 320, label: 'Đồng hồ', shape: 'ellipse', act: () => collect('clock') },
+    { x: 993, y: 107, w: 275, h: 245, label: 'Đồng hồ', shape: 'ellipse', act: () => collect('clock') },
     { x: 1150, y: 605, w: 300, h: 380, label: 'Thùng rác', act: () => collect('paper') },
   ] },
   hallWater: { nav: [BK('hall')], spots: [
