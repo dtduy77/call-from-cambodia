@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110i';
+const ASSET_V = '20261111a';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -150,7 +150,7 @@ const has = id => G.inv.has(id);
 const AR = (x, y, ang, to, label, o = {}) => ({ dir: 'ang', ang, x, y, to, label, ...o });
 const BK = (to, label = 'Quay lại') => ({ dir: 'back', x: 962, y: 990, to, label });
 const afterFolder = { cond: () => !!G.flags.folder };
-// cảnh bàn dán giấy note: dùng chung cho desk (từ máy 04) và other1..3 (3 máy còn lại trong văn phòng)
+// cảnh bàn dán giấy note: dùng chung cho desk (từ máy 04) và other1 (3 máy còn lại trong văn phòng)
 const DESK_SPOTS = [
   { x: 195, y: 90, w: 650, h: 550, label: 'Máy bàn bên', act: () => dialog([L.desk1]) },
 ];
@@ -168,7 +168,7 @@ const VIEWS = {
   ] },
   // Văn phòng theo prototype Figma (f06 → f13): vào là ngồi ngay máy 04 của Tí;
   // quay phải: bàn dán giấy note (slide 35) → bàn có cuốn sổ St5K; quay trái: toàn cảnh (slide 36) → góc bảng ghim.
-  // 3 máy còn lại trong văn phòng (other1..3) dùng chung 1 cảnh bàn dán giấy note: bấm phải 2 lần vẫn là cảnh đó.
+  // 3 máy còn lại trong văn phòng dùng chung 1 cảnh bàn dán giấy note, không có mũi tên qua phải, chỉ ▼ về văn phòng.
   pc: { nav: [AR(228, 609, 180, 'office', 'Nhìn quanh văn phòng'), AR(1722, 590, 0, 'desk', 'Bàn bên phải')], spots: [
     { x: 535, y: 170, w: 330, h: 64, label: 'KICH_BAN', act: () => openFolder('kichban') },
     { x: 535, y: 246, w: 330, h: 64, label: 'DANH_SACH', act: () => openFolder('danhsach') },
@@ -176,9 +176,7 @@ const VIEWS = {
     { x: 535, y: 398, w: 330, h: 64, label: 'THUNG_RAC', act: () => openFolder('rac') },
   ], draw: drawPcLabels },
   desk: { nav: [AR(228, 608, 180, 'pc', 'Về máy 04'), AR(1722, 590, 0, 'desk2', 'Bàn kế tiếp')], spots: DESK_SPOTS },
-  other1: { img: 'desk', nav: [AR(1722, 590, 0, 'other2', 'Máy kế bên'), BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
-  other2: { img: 'desk', nav: [AR(228, 608, 180, 'other1', 'Máy trước'), AR(1722, 590, 0, 'other3', 'Máy kế bên'), BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
-  other3: { img: 'desk', nav: [AR(228, 608, 180, 'other2', 'Máy trước'), BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
+  other1: { img: 'desk', nav: [BK('office', 'Quay lại văn phòng')], spots: DESK_SPOTS },
   desk2: { nav: [AR(230, 608, 180, 'desk', 'Quay lại')], spots: [
     { x: 60, y: 165, w: 555, h: 630, label: 'Máy bàn bên', act: () => dialog([L.desk2]) },
     { x: 1045, y: 495, w: 245, h: 270, label: 'Cuốn sổ', act: () => collect('note') },

@@ -20,7 +20,7 @@ cut1 → 2 câu thoại của Tí ở cổng → ↑ vào thẳng hall (Anh Đ�
 hall ─┬─ → hallOffice (cửa OFFICE, slide 33) ─↗─ pc (ngồi máy 04 của Tí, slide 34: KICH_BAN, DANH_SACH, HO_SO_MAT khóa St5K, THUNG_RAC; nhập đúng St5K → cut2 chích điện → thoại → hồ sơ An Yên)
       │                                           ├─ → desk (bàn dán giấy note, slide 35) ─ → desk2 (bàn có cuốn sổ St5K)
       │                                           └─ ← office (toàn cảnh, slide 36) ─┬─↗ corner (đồng hồ số 4, thùng rác số 20, slide 37)
-      │                                                                              ├─ 3 máy còn lại → other1 → other2 → other3 (cùng 1 ảnh bàn dán note, ▼ về office)
+      │                                                                              ├─ 3 máy còn lại → other1 (1 cảnh bàn dán note, không có mũi tên phải, ▼ về office)
       │                                                                              └─↑ ra hall
       ├─ ← hallWater (ly số 2)
       ├─ ↑ hallKPI (chữ K) ─↑─ boss ─┬─ bossLeft
