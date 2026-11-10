@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110f';
+const ASSET_V = '20261110g';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -259,7 +259,17 @@ const WHO = {
   dai: { name: 'ANH ĐẠI', box: 'ui/box_dai.png', side: 'r', fig: 'chars/dai.png', figSide: 'left' },
   yen: { name: 'AN YÊN', box: 'ui/box_yen.png', side: 'l', fig: 'chars/yen.png', figSide: 'right' },
 };
-let typeTimer = null, typeFull = '', typeIdx = 0;
+let typeTimer = null, typeFull = '', typeIdx = 0, typeOne = false;
+// câu có one: true luôn nằm trên 1 hàng: thu nhỏ chữ của riêng câu đó cho vừa khung (đo lại khi gõ xong, phòng lúc đầu font chưa tải)
+function fitOneLine(again) {
+  const d = ui.dText;
+  if (!again) { d.style.whiteSpace = typeOne ? 'nowrap' : ''; d.style.fontSize = ''; }
+  if (!typeOne) return;
+  const shown = d.textContent; d.textContent = typeFull;
+  const r = d.clientWidth / d.scrollWidth;
+  if (r < 1) d.style.fontSize = Math.floor(parseFloat(getComputedStyle(d).fontSize) * r * 0.99) + 'px';
+  d.textContent = again ? typeFull : shown;
+}
 function dialog(lines, done) {
   G.dlg = { q: lines.slice(), done };
   ui.dialog.classList.remove('hidden'); ui.tip.classList.remove('on');
@@ -267,7 +277,7 @@ function dialog(lines, done) {
 }
 function nextLine() {
   if (!G.dlg) return;
-  if (typeTimer && typeIdx < typeFull.length) { clearInterval(typeTimer); typeTimer = null; ui.dText.textContent = typeFull; typeIdx = typeFull.length; return; }
+  if (typeTimer && typeIdx < typeFull.length) { clearInterval(typeTimer); typeTimer = null; ui.dText.textContent = typeFull; typeIdx = typeFull.length; fitOneLine(true); return; }
   const l = G.dlg.q.shift();
   if (!l) { stopVoice(); ui.dialog.classList.add('hidden'); const d = G.dlg.done; G.dlg = null; if (d) d(); return; }
   const w = WHO[l.who];
@@ -276,23 +286,23 @@ function nextLine() {
   G.dlgWho = l.who;
   if (w.fig) { ui.dFig.src = A(w.fig); ui.dFig.className = w.figSide + ' ' + l.who; } else ui.dFig.className = 'hidden';
   ui.dialog.className = w.fig ? 'fig-' + w.figSide : '';
-  typeFull = l.text; typeIdx = 0; ui.dText.textContent = '';
+  typeFull = l.text; typeIdx = 0; typeOne = !!l.one; fitOneLine(); ui.dText.textContent = '';
   playVoice(l.v);
   clearInterval(typeTimer);
   typeTimer = setInterval(() => {
     typeIdx += 2; ui.dText.textContent = typeFull.slice(0, typeIdx);
-    if (typeIdx >= typeFull.length) { clearInterval(typeTimer); typeTimer = null; }
+    if (typeIdx >= typeFull.length) { clearInterval(typeTimer); typeTimer = null; fitOneLine(true); }
   }, 22);
 }
 ui.dialog.addEventListener('pointerdown', e => { e.stopPropagation(); nextLine(); });
 const L = {
   gate1: { who: 'ti', v: 'gate1_ti', text: 'Đây rồi. Theo tin báo, An Yên bị giam trong nhà này.' },
-  gate2: { who: 'ti', v: 'gate2_ti', text: 'Cứ giả làm người đi xin việc,\nvào được bên trong rồi tính tiếp.' },
+  gate2: { who: 'ti', v: 'gate2_ti', text: 'Cứ giả làm người đi xin việc, vào được bên trong rồi tính tiếp.', one: true },
   notyet: { who: 'ti', v: 'notyet_ti', text: 'Chưa được, An Yên vẫn còn trong đó.' },
   wake: { who: 'dai', v: 'wake_dai', text: 'Tỉnh rồi hả? Từ nay mày làm cho tao. Ở đây tao nói gì nghe nấy, nghe chưa?' },
   art: { who: 'dai', v: 'art_dai', text: 'Nhớ nè: tất cả việc tụi mình đang làm hông phải lừa đảo. Đó là nghệ thuật thuyết phục!' },
   intro: { who: 'dai', v: 'intro_dai', text: 'Ra văn phòng ngồi máy 04 mà làm. Thấy lười là tao chích điện cho dựng tóc luôn á!' },
-  endure: { who: 'ti', v: 'endure_ti', text: '(Phải nhịn. Vào văn phòng\ntìm cách mở máy số 4 trước đã.)' },
+  endure: { who: 'ti', v: 'endure_ti', text: '(Phải nhịn. Vào văn phòng tìm cách mở máy số 4 trước đã.)', one: true },
   watch: { who: 'ti', v: 'watch_ti', text: 'Anh Đại đang để mắt tới mình. Phải vào máy số 4 trước, đừng để bị nghi.' },
   good: { who: 'dai', v: 'good_dai', text: 'Ừ, ngồi làm vậy mới ngoan nghen.' },
   note: { who: 'ti', v: 'note_ti', text: 'Cuốn sổ của người ngồi bàn này, mẩu giấy có ghi là St5K.' },
