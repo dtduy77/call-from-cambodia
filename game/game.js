@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110d';
+const ASSET_V = '20261110e';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -217,8 +217,8 @@ const VIEWS = {
   ], draw: drawCellBars },
   cells: { nav: [AR(493, 779, -120, () => cellAct(603), 'Buồng cuối dãy (603)'), BK('cellDoor')], spots: [
     { x: 985, y: 125, w: 218, h: 955, label: 'Phòng 602', act: () => cellAct(602) },
-    { x: 761, y: 382, w: 83, h: 690, label: 'Phòng 619', act: () => cellAct(619) },
-    { x: 630, y: 450, w: 50, h: 480, label: 'Phòng 601', act: () => cellAct(601) },
+    { x: 760, y: 364, w: 86, h: 714, label: 'Phòng 619', act: () => cellAct(619) },
+    { x: 633, y: 472, w: 50, h: 453, label: 'Phòng 601', act: () => cellAct(601) },
     { x: 340, y: 510, w: 145, h: 390, label: 'Buồng cuối dãy (603)', act: () => cellAct(603) },
   ] },
 };
