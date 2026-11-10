@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110h';
+const ASSET_V = '20261110i';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -203,10 +203,7 @@ const VIEWS = {
     { x: 22, y: 76, w: 698, h: 491, label: 'Bảng KPI', act: () => collect('k') },
     { x: 864, y: 76, w: 556, h: 976, label: 'Cửa phòng ông trùm', go: 'boss', sfx: 'door' },
   ] },
-  boss: { nav: [AR(612, 711, -144, 'bossLeft', 'Góc làm việc'), AR(1302, 701, -43, 'bossRight', 'Góc sofa'), BK('hallKPI', 'Ra hành lang')], spots: [
-    { x: 33, y: 327, w: 665, h: 620, label: 'Góc làm việc', go: 'bossLeft' },
-    { x: 1340, y: 618, w: 580, h: 462, label: 'Góc sofa', go: 'bossRight' },
-  ] },
+  boss: { nav: [AR(612, 711, -144, 'bossLeft', 'Góc làm việc'), AR(1302, 701, -43, 'bossRight', 'Góc sofa'), BK('hallKPI', 'Ra hành lang')], spots: [] }, // chỉ đi bằng mũi tên, không viền góc làm việc / góc sofa
   bossLeft: { nav: [AR(1672, 675, 0, 'bossRight', 'Góc sofa'), BK('boss')], spots: [] },
   bossRight: { nav: [AR(213, 650, 180, 'bossLeft', 'Góc làm việc'), BK('boss')], spots: [
     { x: 720, y: 60, w: 340, h: 420, label: 'Đầu hươu', cond: () => !has('key'), act: () => collect('key') },
