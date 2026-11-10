@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261109c';
+const ASSET_V = '20261110a';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -161,7 +161,7 @@ const VIEWS = {
     { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
     { x: 1108, y: 236, w: 142, h: 200, label: 'Bảng KPI', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
-    { x: 1264, y: 334, w: 110, h: 245, label: 'Cửa gỗ', go: 'hallKPI', lock: true }, // để cuối vì viền đánh số theo thứ tự (hall_4)
+    { x: 1252, y: 186, w: 146, h: 464, label: 'Cửa gỗ', go: 'hallKPI', lock: true }, // để cuối vì viền đánh số theo thứ tự (hall_4)
   ] },
   hallOffice: { nav: [AR(230, 610, 180, 'hall', 'Hành lang'), AR(1144, 915, -54, 'pc', 'Vào ngồi máy 04')], spots: [
     { x: 720, y: 153, w: 894, h: 785, label: 'Vào ngồi máy 04', go: 'pc' },
