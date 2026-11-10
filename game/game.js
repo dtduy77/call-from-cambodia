@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110a';
+const ASSET_V = '20261110b';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -158,7 +158,7 @@ const VIEWS = {
   gate: { nav: [AR(230, 609, 180, () => dialog([L.notyet]), 'Bỏ về'), AR(960, 679, -90, () => enterCompound(), 'Vào khu nhà')], spots: [] }, // prototype f04: ← bỏ về, ↑ đi vào, không viền cổng
   hall: { nav: [AR(1563, 532, -29, 'hallOffice', 'Văn phòng (máy 04)'), AR(1208, 583, -56, 'hallKPI', 'Bảng KPI · cửa gỗ', afterFolder), AR(611, 686, -145, 'hallWater', 'Máy lọc nước', afterFolder), AR(829, 616, -90, 'cellDoor', 'Cửa phòng giam (CELL)', afterFolder)], spots: [
     { x: 280, y: 237, w: 168, h: 215, label: 'Máy lọc nước', go: 'hallWater', lock: true }, // chỉ bình nước, không gồm kệ
-    { x: 655, y: 300, w: 403, h: 360, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
+    { x: 650, y: 187, w: 293, h: 448, label: 'Cửa phòng giam (CELL)', go: 'cellDoor', lock: true },
     { x: 1108, y: 236, w: 142, h: 200, label: 'Bảng KPI', go: 'hallKPI', lock: true },
     { x: 1495, y: 98, w: 403, h: 666, label: 'Cửa OFFICE', go: 'hallOffice' },
     { x: 1252, y: 186, w: 146, h: 464, label: 'Cửa gỗ', go: 'hallKPI', lock: true }, // để cuối vì viền đánh số theo thứ tự (hall_4)
