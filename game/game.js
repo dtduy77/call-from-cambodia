@@ -9,7 +9,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ASSET_V: đổi mỗi khi thay ảnh/âm thanh trùng tên, để trình duyệt không dùng lại bản cũ trong cache
-const ASSET_V = '20261110g';
+const ASSET_V = '20261110h';
 const A = p => 'assets/v2/' + p + '?v=' + ASSET_V;
 
 /* ---------------- Stage scaling (sharp on Retina) ---------------- */
@@ -186,7 +186,7 @@ const VIEWS = {
   office: { nav: [AR(1369, 767, -57, 'corner', 'Góc bảng ghim · đồng hồ'), AR(795, 753, -90, 'hall', 'Ra hành lang')], spots: [
     // chỉ máy số 4 (màn hình có thư mục) mới mở giao diện thư mục; 3 máy còn lại ra cảnh bàn dán note (other1)
     { x: 235, y: 735, w: 300, h: 170, label: 'Máy số 4 (của mình)', go: 'pc' },
-    { x: 545, y: 735, w: 340, h: 170, label: 'Máy bàn khác', go: 'other1' },
+    { x: 579, y: 740, w: 302, h: 167, label: 'Máy bàn khác', go: 'other1' },
     { x: 1030, y: 735, w: 290, h: 170, label: 'Máy bàn khác', go: 'other1' },
     { x: 1335, y: 735, w: 295, h: 170, label: 'Máy bàn khác', go: 'other1' },
     { x: 1080, y: 458, w: 447, h: 218, label: 'Bảng ghim và đồng hồ', go: 'corner' },
